@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Apex Drive — cockpit racing</title>
+<meta name="description" content="A first-person 3D racing game rendered with WebGL. No build step, no dependencies.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stage">
+  <canvas id="view"></canvas>
+
+  <!-- Everything below sits over the 3D view: the car you are sitting in. -->
+  <div id="cockpit" aria-hidden="true">
+    <!-- The cockpit is built from separate pieces rather than one big
+         drawing: only the parts that actually move get repainted. -->
+    <svg class="cp cp--roof" viewBox="0 0 1600 160" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="trimGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#2c313a"/>
+          <stop offset="1" stop-color="#13161b"/>
+        </linearGradient>
+      </defs>
+      <path d="M0 0 H1600 V96 Q800 168 0 96 Z" fill="url(#trimGrad)"/>
+      <path d="M0 96 Q800 168 1600 96" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="3"/>
+    </svg>
+
+    <svg class="cp cp--pillar cp--pillar-l" viewBox="0 0 220 900" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="pillarL" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#0f1115"/>
+          <stop offset="1" stop-color="#2b3038"/>
+        </linearGradient>
+      </defs>
+      <path d="M0 0 L214 0 L96 900 L0 900 Z" fill="url(#pillarL)"/>
+    </svg>
+    <svg class="cp cp--pillar cp--pillar-r" viewBox="0 0 220 900" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="pillarR" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#2b3038"/>
+          <stop offset="1" stop-color="#0f1115"/>
+        </linearGradient>
+      </defs>
+      <path d="M220 0 L6 0 L124 900 L220 900 Z" fill="url(#pillarR)"/>
+    </svg>
+
+    <svg class="cp cp--dash" viewBox="0 0 1600 460" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="dashGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#2e333b"/>
+          <stop offset="0.16" stop-color="#191c22"/>
+          <stop offset="1" stop-color="#0a0c10"/>
+        </linearGradient>
+      </defs>
+      <path d="M0 460 L0 92 Q300 4 780 12 Q1240 20 1600 104 L1600 460 Z" fill="url(#dashGrad)"/>
+      <path d="M0 92 Q300 4 780 12 Q1240 20 1600 104" fill="none" stroke="rgba(255,255,255,0.11)" stroke-width="4"/>
+      <g opacity="0.9">
+        <rect x="1010" y="150" width="180" height="52" rx="12" fill="#080a0d"/>
+        <rect x="1026" y="163" width="148" height="7" rx="3.5" fill="#22262c"/>
+        <rect x="1026" y="178" width="148" height="7" rx="3.5" fill="#22262c"/>
+        <rect x="1250" y="176" width="180" height="52" rx="12" fill="#080a0d"/>
+        <rect x="1266" y="189" width="148" height="7" rx="3.5" fill="#22262c"/>
+        <rect x="1266" y="204" width="148" height="7" rx="3.5" fill="#22262c"/>
+      </g>
+    </svg>
+
+    <!-- Instruments and wheel share one viewBox and one screen rectangle, so
+         the dials always sit in the opening above the wheel's spokes however
+         the window is shaped. The wheel is a separate layer because it is the
+         only part of the two that moves. -->
+    <svg class="cp cp--console" viewBox="0 0 900 520">
+      <defs>
+        <radialGradient id="binGrad" cx="0.5" cy="0.1" r="0.95">
+          <stop offset="0" stop-color="#272c34"/>
+          <stop offset="1" stop-color="#0b0d11"/>
+        </radialGradient>
+      </defs>
+      <path d="M78 520 L96 232 Q300 168 530 240 L548 520 Z" fill="url(#binGrad)"/>
+      <path d="M96 232 Q300 168 530 240" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3"/>
+
+      <g transform="translate(215 320)">
+        <circle r="105" class="dial-face"/>
+        <circle r="105" class="dial-ring"/>
+        <g id="tach-ticks"></g>
+        <path id="tach-redline" class="redline" d="" fill="none"/>
+        <text y="46" class="dial-label">RPM x1000</text>
+        <g id="tach-needle"><path class="needle" d="M-4 10 L4 10 L1.6 -88 L-1.6 -88 Z"/></g>
+        <circle r="11" class="dial-hub"/>
+      </g>
+
+      <g transform="translate(417 332)">
+        <circle r="90" class="dial-face"/>
+        <circle r="90" class="dial-ring"/>
+        <g id="speed-ticks"></g>
+        <text y="40" class="dial-label">km/h</text>
+        <g id="speed-needle"><path class="needle" d="M-3.4 9 L3.4 9 L1.4 -74 L-1.4 -74 Z"/></g>
+        <circle r="9" class="dial-hub"/>
+      </g>
+    </svg>
+
+    <svg class="cp cp--wheel" id="wheel" viewBox="0 0 900 520">
+      <defs>
+        <linearGradient id="wheelGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#434952"/>
+          <stop offset="0.5" stop-color="#1c1f25"/>
+          <stop offset="1" stop-color="#0f1114"/>
+        </linearGradient>
+      </defs>
+      <g transform="translate(300 470)">
+        <circle r="250" fill="none" stroke="url(#wheelGrad)" stroke-width="34"/>
+        <circle r="250" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="2"/>
+        <rect x="-236" y="-22" width="472" height="42" rx="19" fill="#1b1e23"/>
+        <path d="M-18 6 L18 6 L40 248 L-40 248 Z" fill="#1b1e23"/>
+        <circle r="62" fill="#15181c" stroke="#2b3037" stroke-width="3"/>
+        <circle r="26" fill="none" stroke="#d9412f" stroke-width="6"/>
+        <path d="M-13 -244 L13 -244 L13 -222 L-13 -222 Z" fill="#d9412f"/>
+      </g>
+    </svg>
+
+    <!-- rear-view mirror: the frame is HTML, the picture inside it is a
+         second pass of the 3D scene drawn straight into the canvas -->
+    <div id="mirror"><div id="mirror-glass"></div></div>
+
+    <!-- digital readouts, laid over the dash -->
+    <div id="readouts">
+      <div class="readout readout--gear"><span id="gear">N</span></div>
+      <div class="readout"><b id="speed-digital">0</b><span>km/h</span></div>
+    </div>
+  </div>
+
+  <!-- heads-up information -->
+  <div id="hud">
+    <div class="hud-panel hud-panel--left">
+      <div class="stat"><span class="stat__key">Lap</span><span class="stat__val" id="lap">1<i>/3</i></span></div>
+      <div class="stat"><span class="stat__key">Position</span><span class="stat__val" id="place">6<i>/6</i></span></div>
+    </div>
+    <div class="hud-panel hud-panel--right">
+      <div class="stat"><span class="stat__key">Current</span><span class="stat__val stat__val--time" id="laptime">0:00.00</span></div>
+      <div class="stat"><span class="stat__key">Best</span><span class="stat__val stat__val--time" id="best">—:—.—</span></div>
+      <div class="stat stat--delta"><span class="stat__key">Last</span><span class="stat__val stat__val--time" id="last">—:—.—</span></div>
+    </div>
+    <canvas id="map" width="220" height="220"></canvas>
+    <div id="flash"></div>
+  </div>
+
+  <!-- touch controls, shown only on pointer-coarse devices -->
+  <div id="touch" aria-hidden="true">
+    <button class="pad pad--left" data-key="ArrowLeft">◀</button>
+    <button class="pad pad--right" data-key="ArrowRight">▶</button>
+    <button class="pad pad--brake" data-key="ArrowDown">BRAKE</button>
+    <button class="pad pad--gas" data-key="ArrowUp">GAS</button>
+  </div>
+
+  <!-- screens -->
+  <div id="screen" class="screen">
+    <div class="screen__card">
+      <p class="screen__eyebrow">Cockpit racing</p>
+      <h1 class="screen__title">Apex&nbsp;Drive</h1>
+      <p class="screen__blurb">Three and a half kilometres of hills, a hairpin at the
+        bottom of the dip and a very fast sweeper at the far end. You are in the
+        driver's seat — mirrors, dials and all.</p>
+
+      <div class="options">
+        <div class="option">
+          <span class="option__label">Laps</span>
+          <div class="choices" id="laps-choice">
+            <button type="button" class="choice" data-laps="1">1</button>
+            <button type="button" class="choice is-on" data-laps="3">3</button>
+            <button type="button" class="choice" data-laps="5">5</button>
+          </div>
+        </div>
+        <div class="option">
+          <span class="option__label">Rivals</span>
+          <div class="choices" id="skill-choice">
+            <button type="button" class="choice" data-skill="0.86">Rookie</button>
+            <button type="button" class="choice is-on" data-skill="0.94">Pro</button>
+            <button type="button" class="choice" data-skill="1.02">Ace</button>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="start" id="start">Start race</button>
+      <p class="record" id="record"></p>
+
+      <table class="keys">
+        <tr><th>Steer</th><td>← →  or  A D</td><th>Handbrake</th><td>Space</td></tr>
+        <tr><th>Throttle</th><td>↑  or  W</td><th>Look behind</th><td>B</td></tr>
+        <tr><th>Brake / reverse</th><td>↓  or  S</td><th>Back to track</th><td>R</td></tr>
+        <tr><th>Pause</th><td>P  or  Esc</td><th>Sound</th><td>M</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div id="lights" class="lights" hidden>
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+
+  <p id="toast" class="toast" hidden></p>
+</div>
+
+<noscript><p class="noscript">Apex Drive needs JavaScript and WebGL.</p></noscript>
+
+<script src="js/glx.js"></script>
+<script src="js/textures.js"></script>
+<script src="js/track.js"></script>
+<script src="js/meshes.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

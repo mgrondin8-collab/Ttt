@@ -54,3 +54,11 @@ never loses.
 ## One thing to know
 
 Scores live in memory only, so a page reload clears them.
+
+## Also in this repo
+
+`racer/` — **[Apex Drive](racer/README.md)**, a first-person 3D racing game
+where you sit in the driver's seat. Same rules as the game above: no build
+step, no dependencies, open `racer/index.html` and drive. It is raw WebGL,
+and every texture is painted with a 2D canvas at load time, so there are no
+asset files either.
