@@ -1032,6 +1032,15 @@
 
     addEventListener('blur', () => { input.raw = {}; });
 
+    /* Turn off the browser's document behaviour over the game: no selection,
+       no drag, no right-click menu and no clipboard. It stops a long press
+       or a stray drag from interrupting a lap. It applies to this page only
+       — anything around it, such as a host page holding it in a frame, is
+       not ours to change. */
+    for (const evt of ['copy', 'cut', 'paste', 'selectstart', 'dragstart', 'contextmenu']) {
+      addEventListener(evt, e => e.preventDefault());
+    }
+
     // Touch pads map straight onto the same flags.
     const padKeys = { ArrowUp: 'gas', ArrowDown: 'brake', ArrowLeft: 'left', ArrowRight: 'right' };
     [].forEach.call(document.querySelectorAll('.pad'), pad => {
@@ -1042,7 +1051,6 @@
       pad.addEventListener('pointerup', up);
       pad.addEventListener('pointercancel', up);
       pad.addEventListener('pointerleave', up);
-      pad.addEventListener('contextmenu', e => e.preventDefault());
     });
   }
 

@@ -116,6 +116,14 @@ repainted; the dash, pillars and roof are finished layers the browser can
 shift around. Doing it the obvious way — one full-screen SVG, transformed
 every frame — cost more time per frame than drawing the entire 3D world.
 
+## While you are driving
+
+The page turns off the browser's document behaviour over itself: no text
+selection, no dragging, no right-click menu, and no copy, cut or paste. On a
+phone that is what stops a thumb resting on a pad from raising the copy
+callout in the middle of a corner. It covers this page only — a host page
+holding the game in a frame is not the game's to change.
+
 ## Requirements
 
 A browser with WebGL 1. Sound needs Web Audio and starts on the first press

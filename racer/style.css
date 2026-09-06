@@ -24,6 +24,12 @@ html, body {
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-text-size-adjust: 100%;
+  /* The whole page is a game surface rather than a document: nothing here
+     is text to be selected, and a thumb resting on a pad should never raise
+     the copy callout in the middle of a corner. Both inherit. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 #stage {
@@ -403,9 +409,6 @@ html, body {
   letter-spacing: 0.1em;
   backdrop-filter: blur(4px);
   touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
 }
 .pad:active, .pad.is-down { background: rgba(255, 182, 72, 0.35); }
 .pad--left { left: max(2vw, env(safe-area-inset-left)); }
