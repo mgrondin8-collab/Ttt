@@ -107,7 +107,7 @@
       dx /= len; dz /= len;
       p.dx = dx; p.dz = dz;
       p.yaw = Math.atan2(dx, -dz);      // 0 looks down -Z, matching the camera
-      p.nxv = -dz; p.nzv = dx;          // left-hand normal
+      p.nxv = -dz; p.nzv = dx;          // normal pointing right of travel
       p.slope = (nx.y - pv.y) / (2 * spacing);
     }
     for (let i = 0; i < count; i++) {

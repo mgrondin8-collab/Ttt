@@ -67,9 +67,15 @@
     },
 
     /* Model matrix for an object standing on the ground: yaw, then translate,
-       with an optional uniform scale and a pitch/roll for banking. */
+       with an optional uniform scale and a pitch/roll for banking.
+
+       Yaw is measured clockwise from -Z, so forward is (sin yaw, 0, -cos yaw)
+       — the convention the track and the driving model both use. That is a
+       rotation of -yaw about Y, and getting the sign wrong here mirrors the
+       whole world: everything still looks right along -Z, where sin yaw is
+       zero, and is reflected everywhere else. */
     compose(out, x, y, z, yaw, pitch, roll, scale) {
-      const sy = Math.sin(yaw), cy = Math.cos(yaw);
+      const sy = -Math.sin(yaw), cy = Math.cos(yaw);
       const sp = Math.sin(pitch || 0), cp = Math.cos(pitch || 0);
       const sr = Math.sin(roll || 0), cr = Math.cos(roll || 0);
       const s = scale === undefined ? 1 : scale;
@@ -90,13 +96,16 @@
       return out;
     },
 
-    /* View matrix from an eye point and yaw/pitch/roll. Yaw 0 looks down -Z. */
+    /* View matrix from an eye point and yaw/pitch/roll, in the same yaw
+       convention as compose: yaw 0 looks down -Z, and the camera looks along
+       (sin yaw, 0, -cos yaw). The view matrix is the inverse of the camera's
+       placement, so the rotation of -yaw about Y inverts to +yaw here. */
     view(out, x, y, z, yaw, pitch, roll) {
       const a = m4.create(), b = m4.create(), c = m4.create();
       m4.fromRotationZ(a, -(roll || 0));
       m4.fromRotationX(b, -(pitch || 0));
       m4.multiply(c, a, b);
-      m4.fromRotationY(b, -yaw);
+      m4.fromRotationY(b, yaw);
       m4.multiply(a, c, b);
       m4.fromTranslation(b, -x, -y, -z);
       return m4.multiply(out, a, b);
