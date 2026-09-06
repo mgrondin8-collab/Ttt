@@ -97,6 +97,7 @@
     return [v[0] / l, v[1] / l, v[2] / l];
   })();
 
+  const MAX_LOCK = 0.55;         // radians of steering lock at the front wheels
   const TOP_SPEED = 80;          // m/s at the rev limit; drag settles it near 68
   const RIVAL_TOP = 68;          // what a rival will actually run down a straight
   const WHEELBASE = 2.75;
@@ -291,14 +292,22 @@
     }
     if (input.hand) vf = Math.max(0, vf - 12 * dt);
 
-    /* Steering. The front wheels can only turn the car as hard as the tyres
-       will hold, so the rate is capped by grip over speed: ask for more than
-       that and the car understeers instead of spinning on the spot. */
-    const lock = 0.52 / (1 + Math.abs(vf) * 0.05);
-    const steerAngle = input.steer * lock;
-    let yawRate = (Math.abs(vf) < 0.3) ? 0 : (vf / WHEELBASE) * Math.tan(steerAngle);
-    const maxYaw = grip / Math.max(Math.abs(vf), 4);
-    yawRate = Math.max(-maxYaw, Math.min(maxYaw, yawRate));
+    /* Steering. Two things limit how hard the car can be turned: the steering
+       lock, which is what you feel at walking pace, and the tyres, which hold
+       only so much cornering at speed — grip over speed. The smaller of the
+       two is what full input asks for, and the input maps across that range,
+       so half input is half the cornering. Clamping a far larger request
+       against the grip limit, which is what this used to do, made every input
+       past a few per cent identical and left no way to make a small
+       correction. The last tenth reaches past what the tyres hold, so
+       overdriving a corner still washes the nose wide and scrubs off speed. */
+    const speed = Math.abs(vf);
+    const lockYaw = (speed / WHEELBASE) * Math.tan(MAX_LOCK);
+    const gripYaw = (grip * 1.12) / Math.max(speed, 4);
+    const authority = Math.min(lockYaw, gripYaw);
+    // Squared-off response: gentle around centre, full lock still available.
+    const shaped = input.steer * (0.62 + 0.38 * input.steer * input.steer);
+    const yawRate = speed < 0.3 ? 0 : shaped * authority * Math.sign(vf);
     car.yaw += yawRate * dt;
 
     // Rebuild the world velocity around the new heading, then let the tyres
@@ -964,8 +973,12 @@
 
   function readInput(dt) {
     const target = (input.raw.right ? 1 : 0) - (input.raw.left ? 1 : 0);
-    // Ease the steering in and let it centre itself, so taps are usable.
-    const rate = target === 0 ? 7 : 4.5;
+    /* A key is all-or-nothing, so the ramp is the steering: a tap is a small
+       correction, holding winds on more lock. It winds on more slowly the
+       faster you are going, where small corrections are what you want, and
+       always centres quickly when you let go. */
+    const fast = Math.min(1, Math.abs(state.player.speed) / 55);
+    const rate = target === 0 ? 8.5 : 5.4 - 2.3 * fast;
     input.steer += (target - input.steer) * Math.min(1, dt * rate);
     if (Math.abs(input.steer) < 0.004) input.steer = 0;
     input.throttle += ((input.raw.gas ? 1 : 0) - input.throttle) * Math.min(1, dt * 9);
