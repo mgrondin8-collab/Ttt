@@ -954,6 +954,46 @@
     }
   }
 
+  /* Full screen. In an artifact or any other embed this is only allowed if
+     the frame was given permission, and iOS Safari on a phone has no
+     fullscreen API at all — so say what happened rather than appearing to
+     do nothing. */
+  function fullscreenElement() {
+    return document.fullscreenElement || document.webkitFullscreenElement || null;
+  }
+
+  function fullscreenAllowed() {
+    const root = document.documentElement;
+    return !!(root.requestFullscreen || root.webkitRequestFullscreen) &&
+      (document.fullscreenEnabled === undefined || document.fullscreenEnabled ||
+       document.webkitFullscreenEnabled);
+  }
+
+  function toggleFullscreen() {
+    const root = document.documentElement;
+    if (fullscreenElement()) {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if (exit) exit.call(document);
+      return;
+    }
+    const request = root.requestFullscreen || root.webkitRequestFullscreen;
+    if (!request) {
+      toast('Full screen is not available in this browser');
+      return;
+    }
+    const result = request.call(root, { navigationUI: 'hide' });
+    if (result && result.catch) {
+      result.catch(() => toast('This page is not allowed to go full screen'));
+    }
+  }
+
+  function syncFullscreenButton() {
+    const button = el('fullscreen');
+    if (!button) return;
+    button.textContent = fullscreenElement() ? 'Leave full screen' : 'Full screen';
+    button.hidden = !fullscreenAllowed();
+  }
+
   function respawn() {
     const car = state.player;
     const pr = track.project(car.x, car.z, car.hint);
@@ -977,6 +1017,7 @@
     addEventListener('keydown', e => {
       if (e.code === 'KeyP' || e.code === 'Escape') { togglePause(); e.preventDefault(); return; }
       if (e.code === 'KeyM') { toast(sound.toggle() ? 'Sound on' : 'Sound off'); return; }
+      if (e.code === 'KeyF') { toggleFullscreen(); return; }
       if (e.code === 'KeyR' && state.phase === 'race') { respawn(); return; }
       const k = KEYS[e.code];
       if (!k) return;
@@ -1045,6 +1086,9 @@
     }
     const start = el('start');
     if (start) start.addEventListener('click', startRace);
+    const full = el('fullscreen');
+    if (full) full.addEventListener('click', toggleFullscreen);
+    syncFullscreenButton();
     const record = el('record');
     if (record) {
       const best = readRecord();
@@ -1156,6 +1200,11 @@
     window.ApexDrive = { state, track, input, formatTime, standings };
     bindInput();
     addEventListener('resize', resize);
+    /* Entering or leaving full screen changes the viewport, and the mirror's
+       rectangle on the canvas has to be measured again for the new one. */
+    for (const evt of ['fullscreenchange', 'webkitfullscreenchange']) {
+      addEventListener(evt, () => { resize(); syncFullscreenButton(); });
+    }
     resize();
     requestAnimationFrame(frame);
   }

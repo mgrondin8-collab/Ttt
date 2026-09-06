@@ -17,6 +17,13 @@ asset file to fetch.
 | Throttle | `↑` or `W` | Look behind | `B` |
 | Brake, then reverse | `↓` or `S` | Back to the track | `R` |
 | Pause | `P` or `Esc` | Sound on/off | `M` |
+| Full screen | `F` | | |
+
+There is a **Full screen** button beside *Start race* as well as the `F` key.
+Embedded in a page — in an Artifact, say — it only works if the frame was
+given permission, so the button hides itself where it cannot; iOS Safari on
+a phone has no fullscreen API at all, and **Add to Home Screen** is the way
+to get the whole display there.
 
 On a touchscreen the four pads at the bottom of the screen do the same job:
 steering under the left thumb, gas and brake under the right. Hold the phone

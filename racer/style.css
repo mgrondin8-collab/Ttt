@@ -335,6 +335,19 @@ html, body {
 .start:hover { filter: brightness(1.07); }
 .start:active { transform: translateY(1px); }
 
+.launch { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+/* Second-rank button: same shape, none of the pull. */
+.start--ghost {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--edge);
+  box-shadow: none;
+  font-weight: 500;
+}
+.start--ghost:hover { background: rgba(255, 255, 255, 0.12); filter: none; }
+.start--ghost[hidden] { display: none; }
+
 .record {
   margin: 1.1em 0 0;
   font-family: var(--mono);
