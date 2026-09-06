@@ -18,7 +18,12 @@ asset file to fetch.
 | Brake, then reverse | `↓` or `S` | Back to the track | `R` |
 | Pause | `P` or `Esc` | Sound on/off | `M` |
 
-On a touchscreen the four pads at the bottom of the screen do the same job.
+On a touchscreen the four pads at the bottom of the screen do the same job:
+steering under the left thumb, gas and brake under the right. Hold the phone
+in landscape — in portrait the game says so rather than trying.
+
+On iOS, **Share → Add to Home Screen** gives it the whole screen with no
+browser chrome. The layout keeps clear of the notch and the home indicator.
 
 ## The race
 

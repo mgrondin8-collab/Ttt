@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Apex Drive — cockpit racing</title>
 <meta name="description" content="A first-person 3D racing game rendered with WebGL. No build step, no dependencies.">
+<meta name="theme-color" content="#06080b">
+<!-- Added to the home screen on iOS, it opens without browser chrome. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Apex Drive">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -197,6 +203,9 @@
   </div>
 
   <p id="toast" class="toast" hidden></p>
+
+  <!-- A phone held upright has nowhere to put the road. -->
+  <div id="rotate" class="rotate"><p>Turn your phone sideways<span>the track is wider than it is tall</span></p></div>
 </div>
 
 <noscript><p class="noscript">Apex Drive needs JavaScript and WebGL.</p></noscript>
