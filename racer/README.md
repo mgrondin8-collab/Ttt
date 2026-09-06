@@ -55,17 +55,32 @@ a metre left of the centre line:
 
 A light arcade model, but a physical one rather than a set of thresholds:
 
+- **Only the front wheels steer, so the car turns about its rear axle.** The
+  nose swings wide and the tail follows it round, and because you are sitting
+  a metre and a half ahead of that axle, the view sweeps outward as the car
+  takes the corner. Pivoting about the middle of the car instead — which is
+  what a shopping trolley does — reads from the driver's seat as the whole
+  car sliding sideways.
+- **The car has momentum, and it does not turn with the body.** When the
+  heading rotates, the velocity keeps pointing where it was already going;
+  read back in the new heading, part of what was straight ahead is now
+  sideways. That difference is the slip angle, and it is what the tyres have
+  to work against.
+- **Tyres bite harder the more they are asked, up to a limit.** Sideways grip
+  builds with the slip angle and then saturates: under the limit the car
+  leans on the tyres and takes a set, a couple of degrees out of line; past
+  it they let go and the car slides. That is where drifting comes from, and
+  why the handbrake — which takes away two thirds of the sideways grip
+  without changing how fast the car rotates — steps the back out.
+- **Steering is proportional, not on/off.** Full input asks for the smaller
+  of two real limits: the steering lock, which is what you feel at walking
+  pace, and grip over speed, which is what you feel at 200 km/h. Everything
+  between centre and full maps across that range, so a tap at speed is a
+  small correction rather than a dart. Full lock asks for a shade more than
+  the tyres hold, so leaning on it washes the nose gently wide.
 - Engine force falls away as you approach top speed; drag and rolling
-  resistance take it back. Grass has a fifth of the grip and eight times the
+  resistance take it back. Grass has under half the grip and twelve times the
   rolling resistance of tarmac, so running wide costs real time.
-- Velocity is split into forward and sideways components in the car's own
-  frame. The tyres scrub off as much sideways speed as their grip allows,
-  and whatever is left over is a slide — which is where drifting comes from,
-  and why the handbrake (which takes away two thirds of the sideways grip
-  without changing how fast the car rotates) steps the back out.
-- The rate the car can rotate is capped at `grip / speed`. Ask for more lock
-  than the tyres will hold and the car understeers instead of spinning, so a
-  keyboard, which is either full lock or nothing, stays drivable at 250 km/h.
 - Guardrails are solid: you lose the speed you carried into them.
 
 ## How it is drawn

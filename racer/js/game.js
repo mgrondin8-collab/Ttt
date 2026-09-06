@@ -98,6 +98,9 @@
   })();
 
   const MAX_LOCK = 0.55;         // radians of steering lock at the front wheels
+  const CORNERING = 340;         // sideways bite per radian of slip: stiff
+                                 // enough that the body only crabs a couple
+                                 // of degrees before the tyres are at the limit
   const TOP_SPEED = 80;          // m/s at the rev limit; drag settles it near 68
   const RIVAL_TOP = 68;          // what a rival will actually run down a straight
   const WHEELBASE = 2.75;
@@ -299,30 +302,60 @@
        so half input is half the cornering. Clamping a far larger request
        against the grip limit, which is what this used to do, made every input
        past a few per cent identical and left no way to make a small
-       correction. The last tenth reaches past what the tyres hold, so
-       overdriving a corner still washes the nose wide and scrubs off speed. */
+       correction. Full lock asks for a shade more than the tyres hold, so
+       leaning on it all the way still washes the nose gently wide. */
     const speed = Math.abs(vf);
     const lockYaw = (speed / WHEELBASE) * Math.tan(MAX_LOCK);
-    const gripYaw = (grip * 1.12) / Math.max(speed, 4);
+    const gripYaw = (grip * 1.04) / Math.max(speed, 4);
     const authority = Math.min(lockYaw, gripYaw);
     // Squared-off response: gentle around centre, full lock still available.
     const shaped = input.steer * (0.62 + 0.38 * input.steer * input.steer);
     const yawRate = speed < 0.3 ? 0 : shaped * authority * Math.sign(vf);
-    car.yaw += yawRate * dt;
+    /* Only the front wheels steer, so the car turns about its back axle: the
+       nose swings out and the tail follows it round. Pivoting about the
+       middle of the car, which is what this did before, is how a shopping
+       trolley behaves — from the driver's seat it reads as the whole car
+       sliding sideways. Track the rear axle, and put the body back on it. */
+    const halfBase = WHEELBASE / 2;
+    let rearX = car.x - fx * halfBase;
+    let rearZ = car.z - fz * halfBase;
 
-    // Rebuild the world velocity around the new heading, then let the tyres
-    // scrub off whatever sideways speed they can hold.
+    car.yaw += yawRate * dt;
     const nfx = Math.sin(car.yaw), nfz = -Math.cos(car.yaw);
     const nrx = Math.cos(car.yaw), nrz = Math.sin(car.yaw);
+
+    /* The car has turned. Its momentum has not: the velocity keeps pointing
+       where it was already going. Rebuild it in world axes from the heading
+       it was made in, then read it back in the new one — what was straight
+       ahead a moment ago is now partly sideways, and that difference is the
+       slip the tyres have to work against. Without this step the velocity
+       rotated with the body, the car went exactly where its nose pointed at
+       every instant, and it had no weight at all. */
+    const worldVX = fx * vf + rx * vl;
+    const worldVZ = fz * vf + rz * vl;
+    vf = worldVX * nfx + worldVZ * nfz;
+    vl = worldVX * nrx + worldVZ * nrz;
+
     if (!racing && !coasting) { vf = 0; vl = 0; }   // held on the grid
-    const bite = gripLat * dt;
-    if (Math.abs(vl) <= bite) vl = 0; else vl -= Math.sign(vl) * bite;
+
+    /* Tyres. Sideways grip builds with the slip angle and then saturates:
+       under the limit the car leans on the tyres and takes a set, over it
+       they let go and the car slides. Snapping the sideways speed straight
+       to zero, as this did before, is what made the car feel weightless. */
+    const slipAngle = Math.atan2(vl, Math.max(Math.abs(vf), 3));
+    const lateral = Math.max(-gripLat, Math.min(gripLat, -CORNERING * slipAngle));
+    let bite = lateral * dt;
+    if (Math.abs(bite) > Math.abs(vl)) bite = -vl;    // never push it past straight
+    vl += bite;
+    // Sliding sideways scrubs off speed.
     vf -= Math.min(Math.abs(vf), Math.abs(vl) * 0.25 * dt) * Math.sign(vf);
 
     car.vx = nfx * vf + nrx * vl;
     car.vz = nfz * vf + nrz * vl;
-    car.x += car.vx * dt;
-    car.z += car.vz * dt;
+    rearX += car.vx * dt;
+    rearZ += car.vz * dt;
+    car.x = rearX + nfx * halfBase;
+    car.z = rearZ + nfz * halfBase;
     car.speed = vf;
     car.slip = Math.abs(vl);
 
@@ -365,7 +398,8 @@
     car.bounce = Math.max(-0.16, Math.min(0.16, car.bounce));
     car.y = ground;
     car.pitch = -pr.point.slope;
-    car.roll = Math.max(-0.09, Math.min(0.09, -(vl) * 0.012));
+    // Body roll follows the cornering force the tyres are carrying.
+    car.roll = Math.max(-0.1, Math.min(0.1, vf * yawRate * 0.005));
 
     trackLaps(car);
   }
