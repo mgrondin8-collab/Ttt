@@ -1041,6 +1041,13 @@
       addEventListener(evt, e => e.preventDefault());
     }
 
+    const reset = el('chip-reset');
+    if (reset) reset.addEventListener('click', () => {
+      if (state.phase === 'race') respawn();
+    });
+    const pause = el('chip-pause');
+    if (pause) pause.addEventListener('click', togglePause);
+
     // Touch pads map straight onto the same flags.
     const padKeys = { ArrowUp: 'gas', ArrowDown: 'brake', ArrowLeft: 'left', ArrowRight: 'right' };
     [].forEach.call(document.querySelectorAll('.pad'), pad => {
@@ -1109,14 +1116,30 @@
 
   function resize() {
     const dpr = Math.min(devicePixelRatio || 1, 2);
-    const w = Math.floor(innerWidth * dpr), h = Math.floor(innerHeight * dpr);
+
+    /* Size to the viewport that is really on screen. On a phone the layout
+       viewport can include the browser's own furniture, which pushes the
+       bottom of a full-height page — the pedals, in our case — off the
+       display. visualViewport reports what the reader can actually see. */
+    const vv = window.visualViewport;
+    const stage = el('stage');
+    const height = vv ? Math.round(vv.height) : innerHeight;
+    const width = vv ? Math.round(vv.width) : innerWidth;
+    stage.style.height = height + 'px';
+    stage.style.width = width + 'px';
+
+    const w = Math.floor(width * dpr), h = Math.floor(height * dpr);
     if (canvas.width !== w || canvas.height !== h) {
       canvas.width = w; canvas.height = h;
     }
+
+    /* Measure the mirror against the canvas rather than the window, so the
+       rectangle stays right whatever the page around it is doing. */
+    const frame = canvas.getBoundingClientRect();
     const glass = el('mirror-glass').getBoundingClientRect();
     state.mirrorRect = {
-      x: Math.round(glass.left * dpr),
-      y: Math.round((innerHeight - glass.bottom) * dpr),
+      x: Math.round((glass.left - frame.left) * dpr),
+      y: Math.round((frame.bottom - glass.bottom) * dpr),
       w: Math.round(glass.width * dpr),
       h: Math.round(glass.height * dpr)
     };
@@ -1208,6 +1231,10 @@
     window.ApexDrive = { state, track, input, formatTime, standings };
     bindInput();
     addEventListener('resize', resize);
+    if (window.visualViewport) {
+      visualViewport.addEventListener('resize', resize);
+      visualViewport.addEventListener('scroll', resize);
+    }
     /* Entering or leaving full screen changes the viewport, and the mirror's
        rectangle on the canvas has to be measured again for the new one. */
     for (const evt of ['fullscreenchange', 'webkitfullscreenchange']) {

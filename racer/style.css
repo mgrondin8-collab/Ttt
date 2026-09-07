@@ -34,7 +34,14 @@ html, body {
 
 #stage {
   position: fixed;
-  inset: 0;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  /* Follow the viewport that is actually on screen, not the one that
+     includes the browser's own furniture. JS narrows this further where
+     visualViewport reports something smaller still. */
+  height: 100dvh;
   overflow: hidden;
   touch-action: none;
 }
@@ -183,6 +190,22 @@ html, body {
 
 .hud-panel--left { left: max(2vw, env(safe-area-inset-left)); }
 .hud-panel--right { right: max(2vw, env(safe-area-inset-right)); text-align: right; }
+
+/* Touch-only shortcuts, tucked into the corner panel so they need no
+   magic numbers of their own. */
+.chips { display: none; gap: 6px; margin-top: 4px; }
+.chip {
+  pointer-events: auto;
+  font: 600 11px var(--ui);
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  padding: 0.45em 0.7em;
+  touch-action: manipulation;
+}
+.chip:active { background: rgba(255, 182, 72, 0.35); }
 
 .stat { display: grid; gap: 1px; }
 .stat__key {
@@ -393,10 +416,13 @@ html, body {
 
 /* ---------- touch controls ---------- */
 
-#touch { position: absolute; inset: 0; display: none; }
+/* The container spans the screen; only the pads themselves take taps,
+   or it swallows every press meant for anything underneath. */
+#touch { position: absolute; inset: 0; display: none; pointer-events: none; }
 .pad {
   position: absolute;
-  bottom: max(3vh, env(safe-area-inset-bottom));
+  pointer-events: auto;
+  bottom: max(8vh, env(safe-area-inset-bottom));
   width: 15vw;
   max-width: 104px;
   height: 15vw;
@@ -418,6 +444,7 @@ html, body {
 
 @media (pointer: coarse) {
   #touch { display: block; }
+  .chips { display: flex; }
   /* Both thumbs need the bottom corners, so the wheel and dials sit in the
      middle of the dash and the readouts lift above the pads. */
   .cp--console,
@@ -427,7 +454,7 @@ html, body {
   }
   /* Stacked directly above the pads, whatever size they end up. */
   #readouts,
-  #map { bottom: calc(max(3vh, env(safe-area-inset-bottom)) + min(15vw, 104px) + 10px); }
+  #map { bottom: calc(max(8vh, env(safe-area-inset-bottom)) + min(15vw, 104px) + 10px); }
   #map { right: max(2vw, env(safe-area-inset-right)); }
   /* ...and the readouts sit beside the map rather than under it. */
   #readouts {

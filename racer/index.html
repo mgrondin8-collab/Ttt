@@ -140,6 +140,13 @@
     <div class="hud-panel hud-panel--left">
       <div class="stat"><span class="stat__key">Lap</span><span class="stat__val" id="lap">1<i>/3</i></span></div>
       <div class="stat"><span class="stat__key">Position</span><span class="stat__val" id="place">6<i>/6</i></span></div>
+      <!-- The R and P keys have no equivalent on a touchscreen, and being
+           stuck in the grass with no way back is not a game. Top of the
+           screen, where nothing else competes for the space. -->
+      <div class="chips">
+        <button type="button" class="chip" id="chip-reset">↺ Track</button>
+        <button type="button" class="chip" id="chip-pause">❙❙ Pause</button>
+      </div>
     </div>
     <div class="hud-panel hud-panel--right">
       <div class="stat"><span class="stat__key">Current</span><span class="stat__val stat__val--time" id="laptime">0:00.00</span></div>

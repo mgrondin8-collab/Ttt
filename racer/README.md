@@ -26,7 +26,10 @@ a phone has no fullscreen API at all, and **Add to Home Screen** is the way
 to get the whole display there.
 
 On a touchscreen the four pads at the bottom of the screen do the same job:
-steering under the left thumb, gas and brake under the right. Hold the phone
+steering under the left thumb, gas and brake under the right. **Track** and
+**Pause** in the top corner stand in for the `R` and `P` keys, which a
+touchscreen has no way to press — being stuck in the grass with no way back
+is not a game. Hold the phone
 in landscape — in portrait the game says so rather than trying.
 
 On iOS, **Share → Add to Home Screen** gives it the whole screen with no
