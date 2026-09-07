@@ -44,6 +44,23 @@
   }
 }
 
+:root[data-theme="dark"] {
+  --paper:    #12181b;
+  --panel:    #182024;
+  --sunk:     #0e1417;
+  --rule:     #27333a;
+  --ink:      #e6ece9;
+  --ink-dim:  #93a2a6;
+  --ink-faint:#63757b;
+
+  --up:       #4bbf8a;
+  --down:     #e0705a;
+  --warn:     #dda23f;
+  --accent:   #6fc0d8;
+  --accent-on:#0e1417;
+  --focus:    #e0a44a;
+}
+
 * { box-sizing: border-box; }
 
 html { -webkit-text-size-adjust: 100%; }

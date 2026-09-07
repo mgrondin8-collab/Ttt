@@ -93,6 +93,8 @@ that you cannot plan.
 | `engine.js` | Countries, tariffs, lanes, settlement, and the event deck. No DOM. |
 | `ui.js` | Rendering, steppers, sheets, the ledger, the ending. |
 | `tools/simulate.js` | Headless balance harness. |
+| `tools/bundle.js` | Inlines the four files above into `reroute.html`. |
+| `reroute.html` | Built single-file version — one document you can host, mail, or publish anywhere. Rebuild it with `node reroute/tools/bundle.js`; don't edit it by hand. |
 
 ## Notes
 
