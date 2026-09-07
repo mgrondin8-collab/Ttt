@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12181b">
+<meta name="description" content="Reroute — a phone game about moving money between countries while one man keeps changing the tariffs.">
+<title>Reroute</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;1,6..96,400&family=Fira+Mono:wght@400;500&family=Fira+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<main class="app" id="app">
+
+  <header class="top">
+    <div class="top__row">
+      <h1 class="brand">Reroute</h1>
+      <p class="quarter" id="quarter">Q1 of 16</p>
+    </div>
+    <dl class="stats">
+      <div class="stat"><dt>Cash</dt><dd id="stat-cash">$120M</dd></div>
+      <div class="stat"><dt>Net worth</dt><dd id="stat-worth">$225M</dd></div>
+      <div class="stat"><dt>Favour</dt><dd id="stat-favor">10</dd></div>
+    </dl>
+    <div class="goal">
+      <div class="goal__track"><div class="goal__fill" id="goal-fill"></div></div>
+      <p class="goal__label" id="goal-label">Target $1,000M by the end of the term</p>
+    </div>
+  </header>
+
+  <article class="headline" id="headline" role="status" aria-live="polite">
+    <p class="headline__tag" id="headline-tag">Quarter 1</p>
+    <h2 class="headline__title" id="headline-title"></h2>
+    <p class="headline__body" id="headline-body"></p>
+  </article>
+
+  <section class="mapwrap" aria-label="Your network">
+    <svg class="map" id="map" viewBox="0 0 320 178" role="img" aria-labelledby="map-title">
+      <title id="map-title">World map with your plants and this quarter's shipments</title>
+      <g id="map-flows"></g>
+      <g id="map-nodes"></g>
+    </svg>
+    <p class="map__hint" id="map-hint">Tap a country to filter the lanes below.</p>
+  </section>
+
+  <section class="effects" aria-label="Rules currently in force">
+    <h3 class="section__title">In force</h3>
+    <ul class="chips" id="effects"></ul>
+  </section>
+
+  <section class="lanes">
+    <div class="section__head">
+      <h3 class="section__title">Book the quarter</h3>
+      <p class="counter" id="counter">0 of 4 units</p>
+    </div>
+    <ul class="lanelist" id="lanelist"></ul>
+  </section>
+
+  <p class="footnote">
+    The President in this game is a caricature of the 2025 tariff era, not a transcript.
+    Every headline is a joke about a policy pattern — blanket rates, sudden pauses,
+    carve-outs for whoever asked nicely — rather than a quote from anyone.
+  </p>
+
+</main>
+
+<nav class="dock" aria-label="Actions">
+  <div class="dock__tools">
+    <button type="button" class="tool" data-sheet="build"><span class="tool__name">Build</span><span class="tool__note" id="note-build">from $150M</span></button>
+    <button type="button" class="tool" data-sheet="lobby"><span class="tool__name">Carve-out</span><span class="tool__note" id="note-lobby">$56M</span></button>
+    <button type="button" class="tool" data-sheet="preclear"><span class="tool__name">Pre-clear</span><span class="tool__note">front-run</span></button>
+    <button type="button" class="tool" data-sheet="donate"><span class="tool__name">Donate</span><span class="tool__note" id="note-donate">$30M</span></button>
+  </div>
+  <button type="button" class="ship" id="ship">Ship the quarter</button>
+</nav>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet__scrim" data-close></div>
+  <div class="sheet__panel" role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="sheet__grip"></div>
+    <h2 class="sheet__title" id="sheet-title"></h2>
+    <p class="sheet__lede" id="sheet-lede"></p>
+    <div class="sheet__body" id="sheet-body"></div>
+    <button type="button" class="sheet__close" data-close>Close</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="overlay__panel" role="dialog" aria-modal="true" aria-labelledby="overlay-title">
+    <h2 class="overlay__title" id="overlay-title"></h2>
+    <div class="overlay__body" id="overlay-body"></div>
+    <button type="button" class="overlay__action" id="overlay-action"></button>
+  </div>
+</div>
+
+<script src="engine.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>

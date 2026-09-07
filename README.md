@@ -54,3 +54,10 @@ never loses.
 ## One thing to know
 
 Scores live in memory only, so a page reload clears them.
+
+## Also in this repo
+
+[`reroute/`](reroute/) — **Reroute**, a phone game about moving money between
+countries while one man keeps changing the tariffs. Same rules as above: open
+`reroute/index.html`, no build step, no dependencies. See
+[`reroute/README.md`](reroute/README.md).
