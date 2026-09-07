@@ -29,8 +29,14 @@ On a touchscreen the four pads at the bottom of the screen do the same job:
 steering under the left thumb, gas and brake under the right. **Track** and
 **Pause** in the top corner stand in for the `R` and `P` keys, which a
 touchscreen has no way to press — being stuck in the grass with no way back
-is not a game. Hold the phone
-in landscape — in portrait the game says so rather than trying.
+is not a game.
+
+**Both ways up.** Held sideways you get the full windscreen. Held upright
+the game is laid out rather than letterboxed: the road takes the top of the
+screen, the dials, map and numbers sit in a band beneath it, and the bottom
+third is left clear for thumbs. A tall window also has its field of view
+measured across the screen instead of down it, or the road ahead would
+narrow to a slot.
 
 On iOS, **Share → Add to Home Screen** gives it the whole screen with no
 browser chrome. The layout keeps clear of the notch and the home indicator.

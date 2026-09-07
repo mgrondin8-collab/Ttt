@@ -61,7 +61,7 @@
       </defs>
       <path d="M0 460 L0 92 Q300 4 780 12 Q1240 20 1600 104 L1600 460 Z" fill="url(#dashGrad)"/>
       <path d="M0 92 Q300 4 780 12 Q1240 20 1600 104" fill="none" stroke="rgba(255,255,255,0.11)" stroke-width="4"/>
-      <g opacity="0.9">
+      <g opacity="0.9" id="vents">
         <rect x="1010" y="150" width="180" height="52" rx="12" fill="#080a0d"/>
         <rect x="1026" y="163" width="148" height="7" rx="3.5" fill="#22262c"/>
         <rect x="1026" y="178" width="148" height="7" rx="3.5" fill="#22262c"/>
@@ -144,8 +144,8 @@
            stuck in the grass with no way back is not a game. Top of the
            screen, where nothing else competes for the space. -->
       <div class="chips">
-        <button type="button" class="chip" id="chip-reset">↺ Track</button>
-        <button type="button" class="chip" id="chip-pause">❙❙ Pause</button>
+        <button type="button" class="chip" id="chip-reset"><span aria-hidden="true">↺</span><span class="chip__label">Track</span></button>
+        <button type="button" class="chip" id="chip-pause"><span aria-hidden="true">❙❙</span><span class="chip__label">Pause</span></button>
       </div>
     </div>
     <div class="hud-panel hud-panel--right">
@@ -215,8 +215,6 @@
 
   <p id="toast" class="toast" hidden></p>
 
-  <!-- A phone held upright has nowhere to put the road. -->
-  <div id="rotate" class="rotate"><p>Turn your phone sideways<span>the track is wider than it is tall</span></p></div>
 </div>
 
 <noscript><p class="noscript">Apex Drive needs JavaScript and WebGL.</p></noscript>

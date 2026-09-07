@@ -678,8 +678,14 @@
     const w = canvas.width, h = canvas.height;
     const car = state.player;
     const speedFactor = Math.min(1, Math.abs(car.speed) / TOP_SPEED);
-    // The view opens up with speed, which is the oldest trick in racing games.
-    const fov = (50 + speedFactor * 13) * Math.PI / 180;
+    /* The view opens up with speed, which is the oldest trick in racing
+       games. On a wide window the angle is measured down the screen; on a
+       tall one — a phone held upright — it is measured across instead, or
+       the road ahead narrows to a slot. */
+    const aspect = w / h;
+    const fov = aspect < 1.35
+      ? 2 * Math.atan(Math.tan((66 + speedFactor * 10) * Math.PI / 360) / aspect)
+      : (50 + speedFactor * 13) * Math.PI / 180;
 
     gl.viewport(0, 0, w, h);
     gl.disable(gl.SCISSOR_TEST);
@@ -1128,14 +1134,15 @@
     stage.style.height = height + 'px';
     stage.style.width = width + 'px';
 
-    const w = Math.floor(width * dpr), h = Math.floor(height * dpr);
+    /* The canvas is not always the whole stage — held upright it takes the
+       top band and the instruments and thumbs have the rest — so take its
+       size from the element itself. */
+    const frame = canvas.getBoundingClientRect();
+    const w = Math.floor(frame.width * dpr), h = Math.floor(frame.height * dpr);
     if (canvas.width !== w || canvas.height !== h) {
       canvas.width = w; canvas.height = h;
     }
 
-    /* Measure the mirror against the canvas rather than the window, so the
-       rectangle stays right whatever the page around it is doing. */
-    const frame = canvas.getBoundingClientRect();
     const glass = el('mirror-glass').getBoundingClientRect();
     state.mirrorRect = {
       x: Math.round((glass.left - frame.left) * dpr),

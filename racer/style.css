@@ -196,6 +196,9 @@ html, body {
 .chips { display: none; gap: 6px; margin-top: 4px; }
 .chip {
   pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
   font: 600 11px var(--ui);
   letter-spacing: 0.06em;
   color: var(--ink);
@@ -462,34 +465,91 @@ html, body {
   }
 }
 
+/* ---------- held upright ----------
+   A phone in portrait is the wrong shape for a windscreen, so the game is
+   laid out rather than letterboxed: the road takes the top of the screen,
+   the instruments sit in a band beneath it, and the bottom third is left
+   clear for thumbs. The 3D view is sized from the canvas element, so moving
+   it here is all it takes. */
+@media (orientation: portrait) and (pointer: coarse) {
+  #view { top: 0; height: 62%; }
+
+  .cp--roof { height: clamp(26px, 4vh, 52px); }
+  .cp--pillar { height: 62%; width: clamp(20px, 5vw, 46px); }
+  #vents { display: none; }          /* nowhere to sit on a stretched dash */
+
+  /* The corner panels have to leave the mirror its space on a narrow screen,
+     so the shortcuts keep their icons and drop their words. */
+  .hud-panel { padding: 6px 9px; }
+  .chip__label { display: none; }
+  .chip { font-size: 13px; padding: 0.35em 0.6em; }
+
+  /* The dash fills everything under the view: interior, not scenery. */
+  .cp--dash {
+    top: 62%;
+    bottom: auto;
+    left: 0;
+    width: 100%;
+    height: 38%;
+  }
+
+  /* Dials in the band under the view; no room for the wheel. */
+  .cp--console {
+    left: 1.5vw;
+    bottom: auto;
+    top: calc(62% + 0.6vh);
+    width: min(44vw, 250px);
+  }
+  .cp--wheel { display: none; }
+
+  #mirror {
+    top: clamp(4px, 1vh, 12px);
+    width: min(40vw, 175px);
+    height: min(11vw, 50px);
+    border-width: 5px;
+  }
+
+  /* Readouts and map share the instrument band with the dials. */
+  #readouts {
+    right: 2vw;
+    bottom: auto;
+    top: calc(62% + 1.2vh);
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+  /* The band reads left to right: dials, map, then the numbers. */
+  #map {
+    left: auto;
+    right: 28vw;
+    bottom: auto;
+    top: calc(62% + 1vh);
+    width: clamp(74px, 17vw, 120px);
+  }
+
+  /* Thumbs get the bottom third, and bigger targets than in landscape. */
+  .pad {
+    width: 21vw;
+    max-width: 116px;
+    height: 21vw;
+    max-height: 116px;
+    bottom: max(6vh, env(safe-area-inset-bottom));
+  }
+  .pad--left { left: 4vw; }
+  .pad--right { left: calc(4vw + 24vw); }
+  .pad--brake { right: calc(4vw + 24vw); }
+  .pad--gas { right: 4vw; }
+
+  .hud-panel { padding: 7px 10px; }
+  .stat__val { font-size: clamp(15px, 4.4vw, 22px); }
+  .stat__val--time { font-size: clamp(12px, 3.4vw, 17px); }
+}
+
 /* On short or narrow screens the wheel and dials would eat the view, so
    they shrink back out of the way. */
 @media (max-height: 560px) {
   .cp--console, .cp--wheel { width: clamp(260px, 38vw, 460px); bottom: clamp(-30px, -2vh, -6px); }
   .cp--dash { height: clamp(110px, 26vh, 220px); }
-}
-
-.rotate {
-  position: absolute;
-  inset: 0;
-  display: none;
-  place-items: center;
-  padding: 8vw;
-  text-align: center;
-  background: #06080b;
-  z-index: 10;
-}
-.rotate p { margin: 0; font-size: clamp(18px, 5vw, 26px); font-weight: 600; line-height: 1.3; }
-.rotate span {
-  display: block;
-  margin-top: 0.7em;
-  font-size: clamp(12px, 3.4vw, 15px);
-  font-weight: 400;
-  color: var(--dim);
-}
-
-@media (pointer: coarse) and (orientation: portrait) {
-  .rotate { display: grid; }
 }
 
 .noscript {
