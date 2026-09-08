@@ -1590,10 +1590,10 @@ const $ = (id) => document.getElementById(id);
 const el = {
   terrainName: $('terrainName'), roundLabel: $('roundLabel'), budget: $('budget'),
   waveLabel: $('waveLabel'), integrityFill: $('integrityFill'), integrityNum: $('integrityNum'),
-  shop: $('shop'), shopNote: $('shopNote'), shopWrap: $('shopWrap'),
+  shop: $('shop'), status: $('status'), statusTag: $('statusTag'), statusText: $('statusText'),
   inspect: $('inspect'), inspectName: $('inspectName'), inspectStats: $('inspectStats'),
   inspectIcon: $('inspectIcon'), upgradeBtn: $('upgradeBtn'), sellBtn: $('sellBtn'),
-  waveBtn: $('waveBtn'), intel: $('intel'), intelText: $('intelText'),
+  waveBtn: $('waveBtn'),
   speedBtn: $('speedBtn'), pauseBtn: $('pauseBtn'), toast: $('toast'),
 };
 
@@ -1624,7 +1624,7 @@ function buildShop() {
     b.appendChild(iconCanvas(def));
     const n = document.createElement('span');
     n.className = 'card-name';
-    n.textContent = def.name.replace(' ', '\n');
+    n.textContent = def.short;
     const c = document.createElement('span');
     c.className = 'card-cost';
     c.textContent = def.cost;
@@ -1639,13 +1639,10 @@ function buildShop() {
 }
 
 function describe(def) {
-  const bits = [
-    def.role,
-    'DMG ' + def.damage,
-    'RNG ' + def.range.toFixed(1),
-    def.targets === 'both' ? 'ground + air' : def.targets === 'air' ? 'air only' : 'ground only',
-  ];
-  return '<b>' + def.name + '</b> — ' + def.blurb + ' ' + def.placeNote + ' [' + bits.join(' · ') + ']';
+  const targets = def.targets === 'both' ? 'ground + air'
+    : def.targets === 'air' ? 'air only' : 'ground only';
+  return '<b>' + def.name + '</b> — ' + def.placeNote +
+    ' DMG ' + def.damage + ' · RNG ' + def.range.toFixed(1) + ' · ' + targets;
 }
 
 function syncUI() {
@@ -1665,13 +1662,25 @@ function syncUI() {
     card.classList.toggle('broke', S.money < def.cost);
   }
 
-  el.shopNote.innerHTML = S.shopSel
-    ? describe(S.shopSel)
-    : 'Tap a weapon, then tap the grid to emplace it. Each system sites differently.';
+  /* one strip carries either the siting rule for the weapon being placed,
+     or what enemy command has concluded about your line */
+  if (S.shopSel) {
+    el.statusTag.textContent = 'SITE';
+    el.status.classList.add('site');
+    el.status.classList.remove('alert');
+    el.statusText.innerHTML = describe(S.shopSel);
+  } else {
+    el.statusTag.textContent = 'INTEL';
+    el.status.classList.remove('site');
+    el.status.classList.toggle('alert', !!S.intelAlert);
+    el.statusText.textContent = S.waveRunning
+      ? S.intel
+      : S.intel + (S.nextWave ? ' · Inbound: ' + waveSummary() : '');
+  }
 
   const showInspect = !!S.towerSel;
   el.inspect.hidden = !showInspect;
-  el.shopWrap.hidden = showInspect;
+  el.status.hidden = showInspect;
   if (showInspect) renderInspect();
 
   el.waveBtn.classList.toggle('running', S.waveRunning);
@@ -1679,11 +1688,6 @@ function syncUI() {
     ? 'Wave ' + (S.waveIndex + 1) + ' in progress…'
     : 'Start Wave ' + (S.waveIndex + 1);
   el.waveBtn.disabled = S.waveRunning;
-
-  el.intelText.textContent = S.waveRunning
-    ? S.intel
-    : S.intel + (S.nextWave ? ' · Inbound: ' + waveSummary() : '');
-  el.intel.classList.toggle('alert', !!S.intelAlert);
 
   el.speedBtn.textContent = S.speed + '×';
   el.pauseBtn.textContent = S.paused ? '▶' : '❚❚';

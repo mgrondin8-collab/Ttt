@@ -40,20 +40,20 @@
     </div>
   </header>
 
-  <main id="stage">
-    <canvas id="game"></canvas>
-    <div id="toast" class="toast" hidden></div>
+  <main id="field">
+    <div id="stage">
+      <canvas id="game"></canvas>
+      <div id="toast" class="toast" hidden></div>
+    </div>
+    <aside id="rail">
+      <div id="shop" class="shop" role="listbox" aria-label="Ordnance"></div>
+    </aside>
   </main>
 
   <footer id="dock">
-    <div id="intel" class="intel">
-      <span class="intel-tag">INTEL</span>
-      <span id="intelText">Awaiting deployment.</span>
-    </div>
-
-    <div id="shopWrap">
-      <div id="shop" class="shop" role="listbox" aria-label="Ordnance"></div>
-      <p id="shopNote" class="shop-note">Tap a weapon, then tap the grid to emplace it.</p>
+    <div id="status" class="status">
+      <span id="statusTag" class="status-tag">INTEL</span>
+      <span id="statusText" class="status-body">Tap a weapon, then tap the grid to emplace it.</span>
     </div>
 
     <div id="inspect" class="inspect" hidden>
