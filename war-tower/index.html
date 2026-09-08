@@ -19,15 +19,15 @@
     <div class="hud-row">
       <div class="hud-cell">
         <span class="hud-label" id="terrainName">—</span>
-        <span class="hud-sub" id="roundLabel">Round 1</span>
+        <span class="hud-sub" id="roundLabel">R1/6 · W1/8</span>
       </div>
       <div class="hud-cell hud-cell--num">
         <span class="hud-label money" id="budget">0</span>
-        <span class="hud-sub">credits</span>
+        <span class="hud-sub">your credits</span>
       </div>
       <div class="hud-cell hud-cell--num">
-        <span class="hud-label" id="waveLabel">0/8</span>
-        <span class="hud-sub">wave</span>
+        <span class="hud-label foe" id="enemyCredits">0</span>
+        <span class="hud-sub">enemy wave</span>
       </div>
       <div class="hud-cell hud-cell--btns">
         <button id="speedBtn" class="icon-btn" aria-label="Game speed">1×</button>
@@ -96,7 +96,8 @@
     <p class="brief-text" id="briefText"></p>
     <p class="brief-mod" id="briefMod"></p>
     <div class="brief-grid">
-      <div><span id="briefBudget">0</span><small>credits</small></div>
+      <div><span id="briefBudget">0</span><small>your credits</small></div>
+      <div><span id="briefEnemy" class="foe-num">0</span><small>enemy chest</small></div>
       <div><span id="briefIntegrity">0</span><small>integrity</small></div>
       <div><span id="briefWaves">8</span><small>waves</small></div>
     </div>

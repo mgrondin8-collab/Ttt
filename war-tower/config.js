@@ -155,6 +155,7 @@ const TOWERS = [
     id: 'gatling',
     name: 'Gatling Nest',
     role: 'Sustained anti-everything',
+    hp: 220,
     cost: 90,
     damage: 7,
     cooldown: 0.13,
@@ -172,6 +173,7 @@ const TOWERS = [
     id: 'cannon',
     name: 'Siege Cannon',
     role: 'Ground splash',
+    hp: 300,
     cost: 150,
     damage: 40,
     cooldown: 1.15,
@@ -190,6 +192,7 @@ const TOWERS = [
     id: 'frost',
     name: 'Cryo Coil',
     role: 'Area slow',
+    hp: 260,
     cost: 120,
     damage: 6,
     cooldown: 0.85,
@@ -209,6 +212,7 @@ const TOWERS = [
     id: 'tesla',
     name: 'Tesla Pylon',
     role: 'Chained energy',
+    hp: 320,
     cost: 200,
     damage: 24,
     cooldown: 0.9,
@@ -229,6 +233,7 @@ const TOWERS = [
     id: 'mortar',
     name: 'Mortar Pit',
     role: 'Long-range barrage',
+    hp: 380,
     cost: 230,
     damage: 62,
     cooldown: 2.4,
@@ -248,6 +253,7 @@ const TOWERS = [
     id: 'sam',
     name: 'SAM Battery',
     role: 'Dedicated anti-air',
+    hp: 300,
     cost: 170,
     damage: 74,
     cooldown: 1.5,
@@ -267,8 +273,8 @@ const TOWERS = [
 const UPGRADES = [
   null,
   null,
-  { costMul: 0.85, damage: 1.55, range: 1.1, cooldown: 0.88 },
-  { costMul: 1.4, damage: 1.7, range: 1.12, cooldown: 0.85 },
+  { costMul: 0.85, damage: 1.55, range: 1.1, cooldown: 0.88, hp: 1.45 },
+  { costMul: 1.4, damage: 1.7, range: 1.12, cooldown: 0.85, hp: 1.5 },
 ];
 const MAX_TOWER_LEVEL = 3;
 const SELL_REFUND = 0.6;
@@ -277,39 +283,57 @@ const SELL_REFUND = 0.6;
 const ENEMIES = {
   scout: {
     id: 'scout', name: 'Scout Bike', hp: 36, speed: 2.45, armor: 0,
-    resist: { explosive: 0.35 }, bounty: 9, leak: 1, radius: 0.2, points: 6,
+    resist: { explosive: 0.35 }, cost: 32,
+    bounty: 9, leak: 1, radius: 0.2, points: 6,
     unlock: 0, color: '#e2734c', counters: 'explosive',
   },
   trooper: {
     id: 'trooper', name: 'Trooper Mech', hp: 78, speed: 1.35, armor: 3,
-    resist: {}, bounty: 12, leak: 1, radius: 0.26, points: 9,
+    resist: {}, cost: 48, gun: { range: 1.5, damage: 4, cooldown: 1.6 },
+    bounty: 12, leak: 1, radius: 0.26, points: 9,
     unlock: 0, color: '#b9744f', counters: null,
   },
   bulwark: {
     id: 'bulwark', name: 'Bulwark Tank', hp: 165, speed: 0.98, armor: 11,
-    resist: { kinetic: 0.45 }, bounty: 22, leak: 2, radius: 0.31, points: 17,
+    resist: { kinetic: 0.45 }, cost: 92, gun: { range: 2.1, damage: 10, cooldown: 1.8 },
+    bounty: 22, leak: 2, radius: 0.31, points: 17,
     unlock: 2, color: '#8a8f6f', counters: 'kinetic',
   },
   warhound: {
     id: 'warhound', name: 'Warhound', hp: 105, speed: 1.75, armor: 2,
-    resist: { frost: 1 }, slowImmune: true, bounty: 19, leak: 1, radius: 0.25, points: 14,
+    resist: { frost: 1 }, slowImmune: true, cost: 76, gun: { range: 1.2, damage: 5, cooldown: 1.3 },
+    bounty: 19, leak: 1, radius: 0.25, points: 14,
     unlock: 3, color: '#d05a5a', counters: 'frost',
   },
   aegis: {
     id: 'aegis', name: 'Aegis Walker', hp: 140, speed: 1.15, armor: 4,
-    resist: { energy: 0.65 }, bounty: 21, leak: 2, radius: 0.29, points: 16,
+    resist: { energy: 0.65 }, cost: 88, gun: { range: 1.9, damage: 7, cooldown: 1.9 },
+    bounty: 21, leak: 2, radius: 0.29, points: 16,
     unlock: 3, color: '#6f86c4', counters: 'energy',
   },
   wasp: {
     id: 'wasp', name: 'Wasp Drone', hp: 66, speed: 2.05, armor: 0,
-    resist: {}, air: true, bounty: 16, leak: 1, radius: 0.24, points: 12,
+    resist: {}, air: true, cost: 66, gun: { range: 1.6, damage: 4, cooldown: 1.7 },
+    bounty: 16, leak: 1, radius: 0.24, points: 12,
     unlock: 2, color: '#c9a2e8', counters: 'noAir',
   },
   titan: {
     id: 'titan', name: 'Siege Titan', hp: 1500, speed: 0.72, armor: 16,
-    resist: { kinetic: 0.3, explosive: 0.2 }, bounty: 180, leak: 5, radius: 0.46,
+    resist: { kinetic: 0.3, explosive: 0.2 }, cost: 0, gun: { range: 3.8, damage: 30, cooldown: 1.9 },
+    bounty: 180, leak: 5, radius: 0.46,
     points: 0, unlock: 99, boss: true, color: '#9d5b3a', counters: null,
   },
+};
+
+/* ---------- the enemy's war chest ----------
+   Enemy command opens with the same budget the player does and is funded each
+   wave. It never commits the whole chest at once, and it is paid for damage
+   done — so a leaking line funds the force that broke it. */
+const ENEMY_ECON = {
+  income: (wave, round) => 120 + 70 * wave + 190 * round,
+  commitCap: (wave, round) => 210 + 150 * wave + 380 * round,
+  plunderPerIntegrity: 30,
+  plunderPerTower: 45,
 };
 
 /* ---------- difficulty ---------- */
@@ -328,7 +352,7 @@ const LEVELS = [
   },
   {
     id: 'elite', name: 'Elite', tag: 'They are watching',
-    budget: 580, integrity: 16, hpMul: 1.2, speedMul: 1.08, threatMul: 1.15,
+    budget: 580, integrity: 16, hpMul: 1.15, speedMul: 1.06, threatMul: 1.06,
     bountyMul: 0.92, adapt: 0.75, rounds: 6,
     note: 'Waves are rebuilt each round to beat whatever you leaned on.',
   },

@@ -80,6 +80,7 @@ body::before {
   font-variant-numeric: tabular-nums;
 }
 .hud-label.money { color: var(--gold); }
+.hud-label.foe { color: var(--red); }
 .hud-sub {
   font-size: 10px;
   text-transform: uppercase;
@@ -408,12 +409,14 @@ body::before {
 .brief-grid { display: flex; gap: 8px; }
 .brief-grid > div {
   flex: 1;
+  min-width: 0;
   border: 1px solid var(--panel-line);
   border-radius: 12px;
-  padding: 10px 6px;
+  padding: 10px 4px;
   text-align: center;
   background: rgba(255, 255, 255, 0.03);
 }
+.brief-grid span.foe-num { color: var(--red); }
 .brief-grid span {
   display: block;
   font-size: 19px;
@@ -421,7 +424,7 @@ body::before {
   font-variant-numeric: tabular-nums;
 }
 .brief-grid small {
-  font-size: 9.5px;
+  font-size: 8.5px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--ink-faint);

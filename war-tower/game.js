@@ -14,6 +14,9 @@ const S = {
   terrain: TERRAINS[0],
 
   money: 0,
+  enemyCredits: 0,        // enemy command's war chest — opens equal to yours
+  plunder: 0,             // what they earned off you this wave
+  towersLost: 0,
   integrity: 0,
   maxIntegrity: 0,
   kills: 0,
@@ -30,6 +33,7 @@ const S = {
   parts: [],
   zaps: [],
   rings: [],
+  tracers: [],
 
   shopSel: null,           // tower def being placed
   towerSel: null,          // placed tower under inspection
@@ -309,16 +313,17 @@ function placement(def, x, y) {
 /* terrain-adjusted stats */
 function statsOf(t) {
   const def = t.def;
-  let dmg = def.damage, rng = def.range, cd = def.cooldown;
+  let dmg = def.damage, rng = def.range, cd = def.cooldown, hp = def.hp;
   for (let l = 2; l <= t.level; l++) {
     const u = UPGRADES[l];
-    dmg *= u.damage; rng *= u.range; cd *= u.cooldown;
+    dmg *= u.damage; rng *= u.range; cd *= u.cooldown; hp *= u.hp;
   }
   const m = S.terrain.mods;
   return {
     damage: dmg,
     range: rng * m.towerRange,
     cooldown: cd * m.towerCooldown,
+    maxHp: Math.round(hp),
     dps: dmg / (cd * m.towerCooldown),
   };
 }
@@ -350,6 +355,8 @@ function spawnEnemy(id, waveNo) {
     slow: 0, slowT: 0,
     flash: 0,
     wob: Math.random() * 6.28,
+    gunCool: Math.random() * 1.5,
+    gunDamage: def.gun ? def.gun.damage * (1 + 0.035 * waveNo) : 0,
   });
 }
 
@@ -547,9 +554,45 @@ function updateShots(dt) {
   S.shots = S.shots.filter((s) => !s.done);
 }
 
+/* Enemy fire: units engage the nearest emplacement inside their weapon's reach
+   as they advance — they never stop, so the column keeps flowing. This is what
+   makes siting a Cryo Coil beside the road a real risk and a Mortar Pit's
+   standoff a real reward. */
+function enemyFire(e, dt) {
+  const gun = e.def.gun;
+  if (!gun || !S.towers.length) return;
+  e.gunCool -= dt;
+  if (e.gunCool > 0) return;
+  let best = null, bd = gun.range;
+  for (const t of S.towers) {
+    const d = dist(e.x, e.y, t.x, t.y);
+    if (d < bd) { bd = d; best = t; }
+  }
+  if (!best) return;
+  e.gunCool = gun.cooldown;
+  best.hp -= e.gunDamage;
+  best.hurt = 0.25;
+  S.tracers.push({ ax: e.x, ay: e.y, bx: best.x, by: best.y, t: 0.12, life: 0.12,
+    color: '#ff8a6a' });
+  sparks(best.x, best.y, '#ffb07a');
+  if (best.hp <= 0) destroyTower(best, e);
+}
+
+function destroyTower(t, by) {
+  S.towers = S.towers.filter((x) => x !== t);
+  if (S.towerSel === t) S.towerSel = null;
+  S.towersLost++;
+  S.plunder += ENEMY_ECON.plunderPerTower;
+  burst(t.x, t.y, '#ff9152', 22, 1.4);
+  S.rings.push({ x: t.x, y: t.y, r: 0.3, max: 1.6, life: 0.4, t: 0.4, color: '#ff5f6d' });
+  shake(0.6);
+  flash(t.def.name + ' destroyed', true);
+}
+
 function updateEnemies(dt) {
   for (const e of S.enemies) {
     if (e.dead) continue;
+    enemyFire(e, dt);
     if (e.slowT > 0) { e.slowT -= dt; if (e.slowT <= 0) e.slow = 0; }
     if (e.flash > 0) e.flash -= dt;
     const geo = e.def.air ? S.airGeo : S.geo;
@@ -561,6 +604,7 @@ function updateEnemies(dt) {
       e.gone = true;
       e.dead = true;
       S.integrity = Math.max(0, S.integrity - e.def.leak);
+      S.plunder += ENEMY_ECON.plunderPerIntegrity * e.def.leak;
       shake(0.5);
       burst(e.x, Math.min(e.y, GRID_H - 0.3), '#ff5f6d', 14, 1.2);
       if (S.integrity <= 0) endGame(false);
@@ -602,6 +646,9 @@ function updateParticles(dt) {
   S.rings = S.rings.filter((r) => r.t > 0);
   for (const z of S.zaps) z.t -= dt;
   S.zaps = S.zaps.filter((z) => z.t > 0);
+  for (const r of S.tracers) r.t -= dt;
+  S.tracers = S.tracers.filter((r) => r.t > 0);
+  for (const t of S.towers) if (t.hurt > 0) t.hurt -= dt;
 }
 
 let shakeAmt = 0;
@@ -621,6 +668,19 @@ const INTEL_LINE = {
 };
 
 function globalWave() { return S.roundIndex * WAVES_PER_ROUND + S.waveIndex; }
+
+/* Reinforcement funding, plus whatever they took off you last wave. */
+function fundEnemy() {
+  const L = S.level;
+  const opening = S.roundIndex === 0 && S.waveIndex === 0;
+  const income = opening
+    ? 0
+    : Math.round(ENEMY_ECON.income(S.waveIndex, S.roundIndex) * L.threatMul);
+  S.enemyCredits += income + S.plunder;
+  S.lastIncome = income;
+  S.lastPlunder = S.plunder;
+  S.plunder = 0;
+}
 
 function airCoverage() {
   let total = 0, aa = 0;
@@ -674,20 +734,29 @@ function planWave() {
       : 'Enemy command is still probing your line.');
   S.intelAlert = leadGain > 0.4;
 
-  /* --- composition --- */
+  /* --- procurement ---
+     The wave is whatever enemy command can actually pay for out of its chest,
+     up to the doctrine cap for this stage of the campaign. Weights above decide
+     what it buys; the chest decides how much. */
+  S.weights = weights;          /* exposed for tuning and diagnostics */
   const isBoss = S.waveIndex === WAVES_PER_ROUND - 1;
-  let points = Math.round((40 + S.waveIndex * 21 + S.roundIndex * 52) * L.threatMul);
+  const cap = Math.round(ENEMY_ECON.commitCap(S.waveIndex, S.roundIndex) * L.threatMul);
+  let purse = Math.min(S.enemyCredits, cap);
+  const spendable = purse;
   const pool = Object.keys(weights).filter((k) => weights[k] > 0);
+  const cheapest = Math.min(...pool.map((k) => ENEMIES[k].cost));
   const list = [];
   let guard = 0;
-  while (points > 4 && guard++ < 300) {
-    const sum = pool.reduce((a, k) => a + weights[k], 0);
-    let r = rng.next() * sum, pickId = pool[0];
-    for (const k of pool) { r -= weights[k]; if (r <= 0) { pickId = k; break; } }
-    if (ENEMIES[pickId].points > points + 5) { points -= 4; continue; }
+  while (purse >= cheapest && guard++ < 400) {
+    const affordable = pool.filter((k) => ENEMIES[k].cost <= purse);
+    const sum = affordable.reduce((a, k) => a + weights[k], 0);
+    let r = rng.next() * sum, pickId = affordable[0];
+    for (const k of affordable) { r -= weights[k]; if (r <= 0) { pickId = k; break; } }
     list.push(pickId);
-    points -= ENEMIES[pickId].points;
+    purse -= ENEMIES[pickId].cost;
   }
+  S.enemyCredits -= spendable - purse;
+  S.waveSpend = spendable - purse;
   /* shuffle so the column is mixed, then bosses last */
   for (let i = list.length - 1; i > 0; i--) {
     const j = Math.floor(rng.next() * (i + 1));
@@ -740,11 +809,14 @@ function finishWave() {
   for (const k of Object.keys(S.dmgRecent)) {
     S.dmgRecent[k] = S.dmgRecent[k] * 0.5 + S.dmg[k];
   }
+  /* emplacements are patched up between waves; anything destroyed stays lost */
+  for (const t of S.towers) t.hp = t.maxHp;
   const bonus = Math.round((48 + S.waveIndex * 9 + S.roundIndex * 13) * S.level.bountyMul);
   S.money += bonus;
   if (S.waveIndex >= WAVES_PER_ROUND) {
     finishRound(bonus);
   } else {
+    fundEnemy();
     planWave();
     syncUI();
     flash('Wave cleared · +' + bonus + ' credits', false);
@@ -1297,6 +1369,7 @@ function draw() {
   drawPortals();
   drawPlacementHints();
   drawTowers();
+  drawTracers();
   drawRings();
   for (const e of S.enemies) if (!e.def.air) drawEnemy(ctx, e);
   for (const e of S.enemies) if (e.def.air) drawEnemy(ctx, e);
@@ -1477,7 +1550,25 @@ function drawTowers() {
     ctx.restore();
   }
   for (const t of S.towers) {
+    if (t.hurt > 0) {
+      ctx.save();
+      ctx.globalAlpha = clamp(t.hurt / 0.25, 0, 1) * 0.5;
+      ctx.fillStyle = '#ff5f6d';
+      ctx.beginPath();
+      ctx.arc(px(t.x), px(t.y), TS * 0.5, 0, 6.283);
+      ctx.fill();
+      ctx.restore();
+    }
     drawTowerArt(ctx, t.def, t.level, px(t.x), px(t.y), TS * 0.42, t.a, t.spin, t.recoil);
+    if (t.hp < t.maxHp) {
+      const w = TS * 0.66, h = Math.max(2.5, TS * 0.07);
+      const bx = px(t.x) - w / 2, by = px(t.y) + TS * 0.4;
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(bx - 1, by - 1, w + 2, h + 2);
+      const f = clamp(t.hp / t.maxHp, 0, 1);
+      ctx.fillStyle = f > 0.5 ? '#7ce7ff' : f > 0.25 ? '#ffc861' : '#ff5f6d';
+      ctx.fillRect(bx, by, w * f, h);
+    }
   }
 }
 
@@ -1518,6 +1609,21 @@ function drawShots() {
       ctx.fill();
       ctx.restore();
     }
+  }
+}
+
+function drawTracers() {
+  for (const r of S.tracers) {
+    ctx.save();
+    ctx.globalAlpha = clamp(r.t / r.life, 0, 1) * 0.9;
+    ctx.strokeStyle = r.color;
+    ctx.lineWidth = Math.max(1.2, TS * 0.045);
+    ctx.setLineDash([TS * 0.16, TS * 0.12]);
+    ctx.beginPath();
+    ctx.moveTo(px(r.ax), px(r.ay));
+    ctx.lineTo(px(r.bx), px(r.by));
+    ctx.stroke();
+    ctx.restore();
   }
 }
 
@@ -1589,7 +1695,8 @@ function drawPaused(w, h) {
 const $ = (id) => document.getElementById(id);
 const el = {
   terrainName: $('terrainName'), roundLabel: $('roundLabel'), budget: $('budget'),
-  waveLabel: $('waveLabel'), integrityFill: $('integrityFill'), integrityNum: $('integrityNum'),
+  integrityFill: $('integrityFill'), integrityNum: $('integrityNum'),
+  enemyCredits: $('enemyCredits'),
   shop: $('shop'), status: $('status'), statusTag: $('statusTag'), statusText: $('statusText'),
   inspect: $('inspect'), inspectName: $('inspectName'), inspectStats: $('inspectStats'),
   inspectIcon: $('inspectIcon'), upgradeBtn: $('upgradeBtn'), sellBtn: $('sellBtn'),
@@ -1647,9 +1754,11 @@ function describe(def) {
 
 function syncUI() {
   el.budget.textContent = S.money;
+  el.enemyCredits.textContent = S.waveSpend || 0;
   el.terrainName.textContent = S.terrain.name;
-  el.roundLabel.textContent = 'Round ' + (S.roundIndex + 1) + ' of ' + S.level.rounds + ' · ' + S.level.name;
-  el.waveLabel.textContent = Math.min(S.waveIndex + 1, WAVES_PER_ROUND) + '/' + WAVES_PER_ROUND;
+  el.roundLabel.textContent = 'R' + (S.roundIndex + 1) + '/' + S.level.rounds +
+    ' · W' + Math.min(S.waveIndex + 1, WAVES_PER_ROUND) + '/' + WAVES_PER_ROUND +
+    ' · ' + S.level.name;
 
   const f = clamp(S.integrity / S.maxIntegrity, 0, 1);
   el.integrityFill.style.width = (f * 100) + '%';
@@ -1675,7 +1784,9 @@ function syncUI() {
     el.status.classList.toggle('alert', !!S.intelAlert);
     el.statusText.textContent = S.waveRunning
       ? S.intel
-      : S.intel + (S.nextWave ? ' · Inbound: ' + waveSummary() : '');
+      : S.intel + (S.nextWave
+        ? ' · Reserve ' + S.enemyCredits + ' · Inbound: ' + waveSummary()
+        : '');
   }
 
   const showInspect = !!S.towerSel;
@@ -1746,12 +1857,15 @@ cv.addEventListener('pointerdown', (ev) => {
     if (!res.ok) { flash(res.why); return; }
     if (S.money < def.cost) { flash('Not enough credits — need ' + def.cost + '.'); return; }
     S.money -= def.cost;
-    S.towers.push({
+    const built = {
       def, gx: t.x, gy: t.y,
       x: t.x + 0.5, y: t.y + 0.5,
       level: 1, cool: 0, a: -Math.PI / 2, spin: 0, recoil: 0,
-      spent: def.cost,
-    });
+      spent: def.cost, hp: 0, maxHp: 0, hurt: 0,
+    };
+    built.maxHp = statsOf(built).maxHp;
+    built.hp = built.maxHp;
+    S.towers.push(built);
     S.rings.push({ x: t.x + 0.5, y: t.y + 0.5, r: 0.2, max: 1.1, life: 0.3, t: 0.3, color: '#7ce7ff' });
     if (S.money < def.cost) S.shopSel = null;
     syncUI();
@@ -1777,6 +1891,8 @@ el.upgradeBtn.addEventListener('click', () => {
   S.money -= c;
   t.spent += c;
   t.level++;
+  t.maxHp = statsOf(t).maxHp;
+  t.hp = t.maxHp;
   S.rings.push({ x: t.x, y: t.y, r: 0.2, max: 1.2, life: 0.35, t: 0.35, color: '#ffc861' });
   syncUI();
 });
@@ -1826,6 +1942,9 @@ function newCampaign(L) {
   S.level = L;
   S.roundIndex = 0;
   S.money = L.budget;
+  S.enemyCredits = L.budget;      /* they open with exactly what you do */
+  S.plunder = 0;
+  S.towersLost = 0;
   S.integrity = L.integrity;
   S.maxIntegrity = L.integrity;
   S.kills = 0;
@@ -1848,11 +1967,15 @@ function startRound() {
   S.shopSel = null;
   S.towerSel = null;
   S.waveRunning = false;
+  S.tracers = [];
+  S.plunder = 0;
   S.intel = 'Enemy command is still probing your line.';
   S.intelAlert = false;
   generateMap((S.roundIndex + 1) * 7919 + S.level.id.length * 131 + Date.now() % 1000);
   resize();
   paintTerrain();
+  fundEnemy();
+  $('briefEnemy').textContent = S.enemyCredits;
   planWave();
 
   $('briefRound').textContent = 'Round ' + (S.roundIndex + 1) + ' of ' + S.level.rounds;

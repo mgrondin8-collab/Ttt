@@ -5,10 +5,12 @@ no build step and no dependencies — open `index.html` and play.
 
 ## The idea
 
-You are given a budget and a battlefield. You spend the budget on weapon
-systems, site them on a grid around the enemy road, and hold the line for eight
-waves. Then the terrain changes and you do it again — on ground that fights you
-differently, against an enemy that has been reading your last eight waves.
+You are given a budget and a battlefield. So is the enemy — the same budget,
+to the credit. You spend yours on weapon systems and site them on a grid around
+their road; they spend theirs on the column that comes down it. Hold the line
+for eight waves, then the terrain changes and you do it again — on ground that
+fights you differently, against an enemy that has been reading your last eight
+waves and shooting back at your emplacements.
 
 ## Play
 
@@ -52,6 +54,37 @@ puzzle, not just "anywhere off the road".
 Armour subtracts from kinetic damage but never fully negates it; each enemy
 type resists a different damage school.
 
+## They shoot back
+
+Emplacements have structure, and most enemy units carry a weapon they fire on
+the move at whatever they can reach. Reach is short — a Trooper Mech engages
+1.5 tiles, a Bulwark 2.1, a Siege Titan 3.8 — so the siting rules above stop
+being a constraint and start being a decision:
+
+- A **Cryo Coil** must sit within one tile of the road, so it is always inside
+  small-arms reach. It is the emplacement you will lose.
+- A **Mortar Pit** must sit two or more tiles off the road, which puts it out of
+  reach of everything except a Titan.
+- Everything else is your call: closer covers more road, further survives.
+
+Damaged emplacements are patched up free between waves. Anything actually
+destroyed is gone, and you pay full price to rebuild it.
+
+## The enemy's war chest
+
+Enemy command opens the campaign with **exactly your starting budget** and is
+funded again before every wave. It never commits the whole chest at once — a
+doctrine cap limits what any single wave can cost — and it banks the rest.
+
+It is also paid for damage: **30 credits per point of core integrity** it takes
+off you and **45 per emplacement destroyed**. A leaking line funds the force
+that broke it, so a bad wave is felt twice.
+
+The HUD shows what they have committed to the wave you are facing; the intel
+strip shows what is still in reserve. Unit prices sit in the same range as your
+own hardware — a Scout Bike is 32 credits, a Trooper Mech 48, a Bulwark Tank 92
+— so you can read a wave's cost against what you could have built instead.
+
 ## The enemy adapts
 
 After every wave the director totals the damage you dealt by school — kinetic,
@@ -76,9 +109,11 @@ lands. How hard they read you is the difficulty:
 | Elite | 0.75 | +20% enemy health, tighter budget. |
 | Nightmare | 1.00 | Every weakness exploited within a single wave. |
 
-Six rounds of eight waves; the eighth wave of each round brings a Siege Titan.
-Between rounds your emplacements are recovered as 50% salvage, so each new
-terrain starts from a clean board and a bigger wallet.
+Six rounds of eight waves; the eighth wave of each round brings a Siege Titan,
+which is high command's asset rather than a purchase and arrives whatever the
+chest looks like. Between rounds your emplacements are recovered as 50%
+salvage, so each new terrain starts from a clean board and a bigger wallet —
+and the enemy carries its chest across too.
 
 ## Files
 
@@ -87,7 +122,7 @@ terrain starts from a clean board and a bigger wallet.
 | `index.html` | HUD, battlefield canvas, dock and the four overlay screens. |
 | `style.css` | Command-console shell, safe-area handling, both orientations. |
 | `config.js` | Terrain, weapon, enemy and difficulty tables, plus the seeded RNG. |
-| `game.js` | Map generation, combat, the wave director, rendering and input. |
+| `game.js` | Map generation, combat both ways, the wave director and enemy economy, rendering and input. |
 
 ## How it is drawn
 
