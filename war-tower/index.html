@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>War Tower</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e14">
+<meta name="description" content="A top-down tower defence campaign built for iPhone.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="War Tower">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <header id="hud">
+    <div class="hud-row">
+      <div class="hud-cell">
+        <span class="hud-label" id="terrainName">—</span>
+        <span class="hud-sub" id="roundLabel">Round 1</span>
+      </div>
+      <div class="hud-cell hud-cell--num">
+        <span class="hud-label money" id="budget">0</span>
+        <span class="hud-sub">credits</span>
+      </div>
+      <div class="hud-cell hud-cell--num">
+        <span class="hud-label" id="waveLabel">0/8</span>
+        <span class="hud-sub">wave</span>
+      </div>
+      <div class="hud-cell hud-cell--btns">
+        <button id="speedBtn" class="icon-btn" aria-label="Game speed">1×</button>
+        <button id="pauseBtn" class="icon-btn" aria-label="Pause">❚❚</button>
+      </div>
+    </div>
+    <div class="integrity">
+      <div class="integrity-bar"><span id="integrityFill"></span></div>
+      <span class="integrity-num" id="integrityNum">20</span>
+    </div>
+  </header>
+
+  <main id="stage">
+    <canvas id="game"></canvas>
+    <div id="toast" class="toast" hidden></div>
+  </main>
+
+  <footer id="dock">
+    <div id="intel" class="intel">
+      <span class="intel-tag">INTEL</span>
+      <span id="intelText">Awaiting deployment.</span>
+    </div>
+
+    <div id="shopWrap">
+      <div id="shop" class="shop" role="listbox" aria-label="Ordnance"></div>
+      <p id="shopNote" class="shop-note">Tap a weapon, then tap the grid to emplace it.</p>
+    </div>
+
+    <div id="inspect" class="inspect" hidden>
+      <div class="inspect-head">
+        <canvas id="inspectIcon" width="96" height="96" aria-hidden="true"></canvas>
+        <div>
+          <h3 id="inspectName">—</h3>
+          <p id="inspectStats">—</p>
+        </div>
+        <button id="inspectClose" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+      <div class="inspect-actions">
+        <button id="upgradeBtn" class="btn btn--go">Upgrade</button>
+        <button id="sellBtn" class="btn btn--ghost">Sell</button>
+      </div>
+    </div>
+
+    <button id="waveBtn" class="btn btn--wave">Start Wave 1</button>
+  </footer>
+
+</div>
+
+<!-- ---------- overlays ---------- -->
+
+<section id="screenMenu" class="overlay">
+  <div class="sheet">
+    <h1 class="title">War<span>Tower</span></h1>
+    <p class="tagline">Six battlefields. One budget. An enemy that learns.</p>
+    <h2 class="sheet-h">Select difficulty</h2>
+    <div id="levelList" class="level-list"></div>
+    <button id="startBtn" class="btn btn--go btn--big">Deploy</button>
+    <p class="fineprint">Portrait · touch · no install</p>
+  </div>
+</section>
+
+<section id="screenBrief" class="overlay" hidden>
+  <div class="sheet">
+    <p class="eyebrow" id="briefRound">Round 1 of 6</p>
+    <h2 class="sheet-h sheet-h--big" id="briefName">Verdant Basin</h2>
+    <p class="brief-text" id="briefText"></p>
+    <p class="brief-mod" id="briefMod"></p>
+    <div class="brief-grid">
+      <div><span id="briefBudget">0</span><small>credits</small></div>
+      <div><span id="briefIntegrity">0</span><small>integrity</small></div>
+      <div><span id="briefWaves">8</span><small>waves</small></div>
+    </div>
+    <button id="briefBtn" class="btn btn--go btn--big">Take the field</button>
+  </div>
+</section>
+
+<section id="screenRound" class="overlay" hidden>
+  <div class="sheet">
+    <p class="eyebrow">Sector held</p>
+    <h2 class="sheet-h sheet-h--big" id="roundTitle">Round clear</h2>
+    <p class="brief-text" id="roundText"></p>
+    <div class="brief-grid">
+      <div><span id="roundBonus">0</span><small>bonus</small></div>
+      <div><span id="roundRepair">0</span><small>repaired</small></div>
+      <div><span id="roundKills">0</span><small>kills</small></div>
+    </div>
+    <button id="roundBtn" class="btn btn--go btn--big">Next battlefield</button>
+  </div>
+</section>
+
+<section id="screenEnd" class="overlay" hidden>
+  <div class="sheet">
+    <h2 class="sheet-h sheet-h--big" id="endTitle">Core lost</h2>
+    <p class="brief-text" id="endText"></p>
+    <div class="brief-grid">
+      <div><span id="endRounds">0</span><small>rounds</small></div>
+      <div><span id="endWaves">0</span><small>waves</small></div>
+      <div><span id="endKills">0</span><small>kills</small></div>
+    </div>
+    <button id="endBtn" class="btn btn--go btn--big">New campaign</button>
+  </div>
+</section>
+
+<script src="config.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

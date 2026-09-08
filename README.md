@@ -1,3 +1,15 @@
+# Two browser games
+
+Both are dependency-free and run straight from the file system — no build step,
+no package manager, no server.
+
+| Game | Open | What it is |
+| --- | --- | --- |
+| Tic Tac Toe | `index.html` | Drawn-by-pen tic tac toe with an unbeatable computer player. |
+| [War Tower](war-tower/) | `war-tower/index.html` | Top-down tower defence for iPhone: six terrains, one budget, an enemy that adapts to your damage profile. |
+
+---
+
 # Tic Tac Toe
 
 A small, dependency-free tic tac toe game that runs straight from the file
