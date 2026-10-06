@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
+<title>Life Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;1,6..96,400&family=Fira+Mono:wght@400;500&family=Fira+Sans:wght@400;500&display=swap">
+<link rel="stylesheet" href="agent.css">
+</head>
+<body>
+  <main class="chat">
+    <header class="masthead">
+      <h1 class="masthead__title">Life Agent</h1>
+      <div class="masthead__actions">
+        <button type="button" class="link" id="new-chat">New conversation</button>
+        <button type="button" class="link" id="open-settings">Settings</button>
+      </div>
+    </header>
+
+    <section class="log" id="log" aria-live="polite" aria-label="Conversation">
+      <p class="empty" id="empty">Say hello. Talk about your day, a decision you're weighing, or whatever's on your mind.</p>
+    </section>
+
+    <p class="error" id="error" role="alert" hidden></p>
+
+    <form class="composer" id="composer">
+      <label class="visually-hidden" for="input">Message</label>
+      <textarea id="input" rows="1" placeholder="Write a message…" autocomplete="off"></textarea>
+      <button type="submit" class="send" id="send" aria-label="Send">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </form>
+  </main>
+
+  <dialog class="settings" id="settings">
+    <form method="dialog" id="settings-form">
+      <h2>Settings</h2>
+      <label for="api-key">Anthropic API key</label>
+      <input id="api-key" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
+      <p class="hint">Your key is stored only in this browser and sent only to Anthropic. Create one at console.anthropic.com.</p>
+      <label for="agent-name">What should your agent call you?</label>
+      <input id="agent-name" type="text" placeholder="Your first name (optional)" autocomplete="given-name">
+      <div class="settings__buttons">
+        <button type="submit" value="cancel" class="link">Cancel</button>
+        <button type="submit" value="save" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="agent.js"></script>
+</body>
+</html>

@@ -39,6 +39,9 @@ Animation is skipped entirely under `prefers-reduced-motion`.
 | `index.html` | Markup for the board, controls and scoreboard. |
 | `style.css` | Palette tokens, layout, and both themes. |
 | `script.js` | Game rules, minimax computer player, drawn marks, keyboard handling. |
+| `agent.html` | The Life Agent chat page. |
+| `agent.css` | Chat layout and both themes. |
+| `agent.js` | Conversation, streaming replies from Claude, settings. |
 
 ## How the unbeatable player works
 
@@ -54,3 +57,29 @@ never loses.
 ## One thing to know
 
 Scores live in memory only, so a page reload clears them.
+
+# Life Agent
+
+`agent.html` is a chat page for talking with your life agent, a warm,
+conversational companion powered by Claude (`claude-opus-5-5`). It replies the
+way a person would in a normal discussion: short, plain prose, one question at a
+time, and in the same language you write in.
+
+## Use it
+
+1. Open `agent.html` in a browser.
+2. In **Settings**, paste an Anthropic API key (create one at
+   console.anthropic.com) and, if you want, the name the agent should call you.
+3. Type and press Enter. Shift+Enter adds a new line.
+
+Replies stream in as they're written. The conversation is saved in this browser,
+so it's still there after a reload. **New conversation** clears it.
+
+## Good to know
+
+- The API key is stored in this browser's local storage and sent only to
+  Anthropic. Don't host this page on a public site with your key in it; anyone
+  using that browser can use the key.
+- If the model declines a message, the request asks Anthropic to retry it on a
+  recommended fallback model automatically (`fallbacks: "default"`).
+- Changing your name in Settings applies to the next new conversation.
