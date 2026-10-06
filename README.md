@@ -41,7 +41,8 @@ Animation is skipped entirely under `prefers-reduced-motion`.
 | `script.js` | Game rules, minimax computer player, drawn marks, keyboard handling. |
 | `agent.html` | The Life Agent chat page. |
 | `agent.css` | Chat layout and both themes. |
-| `agent.js` | Conversation, streaming replies from Claude, settings. |
+| `agent.js` | Conversation, streaming replies from Claude, settings, talk mode. |
+| `voice.js` | Speech in and out: listening, and reading replies aloud as they stream. |
 
 ## How the unbeatable player works
 
@@ -72,7 +73,19 @@ time, and in the same language you write in.
    console.anthropic.com) and, if you want, the name the agent should call you.
 3. Type and press Enter. Shift+Enter adds a new line.
 
-Replies stream in as they're written. The conversation is saved in this browser,
+Replies stream in as they're written.
+
+## Talk with it
+
+Tap the microphone button to start a spoken conversation. The page listens,
+sends what you said when you pause, reads the reply aloud, then listens again.
+Tap the microphone while the agent is speaking to interrupt it; tap it while
+it's listening to stop. After two silences in a row it pauses on its own.
+
+**Voice on** in the header reads typed conversations aloud too. Pick the
+language you speak in Settings; it's used both to understand you and for the
+agent's voice. Listening needs Chrome, Edge or Safari, and the page must be
+opened over `https://` (for example from GitHub Pages), not as a local file. The conversation is saved in this browser,
 so it's still there after a reload. **New conversation** clears it.
 
 ## Good to know

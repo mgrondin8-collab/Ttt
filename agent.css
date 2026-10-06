@@ -69,7 +69,8 @@ body {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 4px 12px;
   padding: 20px 0 14px;
   border-bottom: 1px solid var(--rule);
 }
@@ -142,6 +143,33 @@ body {
 
 @keyframes pulse { 50% { opacity: 0.3; } }
 
+.voice-status {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+.mic {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.mic svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.mic.is-on { background: var(--accent); border-color: var(--accent); color: var(--accent-on); }
+.mic.is-listening { animation: listening 1.6s ease-in-out infinite; }
+
+@keyframes listening {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent); }
+  50% { box-shadow: 0 0 0 6px transparent; }
+}
+
 .error {
   margin: 0 0 8px;
   color: var(--error);
@@ -199,7 +227,7 @@ body {
 .settings::backdrop { background: rgba(0, 0, 0, 0.35); }
 .settings h2 { margin: 0 0 16px; font-family: var(--display); font-weight: 400; }
 .settings label { display: block; font-size: 0.9rem; margin: 12px 0 6px; }
-.settings input {
+.settings input, .settings select {
   width: 100%;
   padding: 9px 12px;
   border: 1px solid var(--rule);
@@ -230,4 +258,5 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .msg--agent.is-waiting::after { animation: none; }
+  .mic.is-listening { animation: none; outline: 3px solid var(--accent); outline-offset: 2px; }
 }

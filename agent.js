@@ -1,9 +1,12 @@
 import Anthropic from "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.131.0/+esm";
+import { Speaker, canListen, canSpeak, listen, stopListening } from "./voice.js";
 
 const MODEL = "claude-opus-5-5";
 const STORE_KEY = "life-agent:conversation";
 const KEY_KEY = "life-agent:api-key";
 const NAME_KEY = "life-agent:name";
+const LANG_KEY = "life-agent:lang";
+const SPEAK_KEY = "life-agent:speak";
 
 const log = document.getElementById("log");
 const empty = document.getElementById("empty");
@@ -14,6 +17,10 @@ const sendButton = document.getElementById("send");
 const settings = document.getElementById("settings");
 const keyField = document.getElementById("api-key");
 const nameField = document.getElementById("agent-name");
+const langField = document.getElementById("agent-lang");
+const micButton = document.getElementById("mic");
+const speakToggle = document.getElementById("speak-toggle");
+const voiceStatus = document.getElementById("voice-status");
 
 // Browser storage can throw (private mode, blocked site data); the page still works without it.
 const store = {
@@ -29,7 +36,8 @@ function systemPrompt(name) {
     "",
     "Talk like a real person in a normal conversation, not like a report:",
     "- Keep replies short, usually two to five sentences, unless they ask for more.",
-    "- Write in plain prose. No headings, no bullet lists, no bold text.",
+    "- Your replies are often read aloud by a voice, so write the way people speak:",
+    "  plain sentences, no headings, lists, bold text, emoji, symbols or links.",
     "- Ask at most one question at a time, and only when it moves the conversation forward.",
     "- Listen first. Reflect back what you heard before offering advice, and offer advice only when it's wanted.",
     "- Be honest and kind. Don't flatter, don't lecture.",
@@ -112,12 +120,21 @@ function describe(err) {
   return "Something went wrong. Please try again.";
 }
 
+// Sends one message and shows (and, if voice is on, speaks) the reply.
+// Resolves true once the reply is complete and the voice has finished.
 async function send(text) {
   const apiKey = store.get(KEY_KEY);
   if (!apiKey) {
     openSettings();
-    return;
+    return false;
   }
+  const speak = talking || speakReplies;
+  let spoken = Promise.resolve();
+  const startVoice = () => {
+    if (!speak) return;
+    spoken = new Promise((resolve) => speaker.start(lang(), resolve));
+  };
+  startVoice();
 
   showError("");
   setBusy(true);
@@ -134,7 +151,8 @@ async function send(text) {
       max_tokens: 64000,
       system: conversation.system,
       messages: [...conversation.messages, userMessage],
-      output_config: { effort: "medium" },
+      // Low effort keeps replies quick, which matters most when you're talking out loud.
+      output_config: { effort: "low" },
       // If the model declines, Anthropic re-runs the turn on a recommended fallback model.
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
@@ -146,8 +164,13 @@ async function send(text) {
         // The first model stopped partway; the fallback model starts the reply over.
         shown = "";
         bubble.textContent = "";
+        startVoice();
       } else if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
         shown += event.delta.text;
+        if (speak) {
+          speaker.push(event.delta.text);
+          setStatus("Speaking… tap the mic to interrupt");
+        }
         bubble.classList.remove("is-waiting");
         bubble.textContent = shown;
         scrollDown();
@@ -163,29 +186,153 @@ async function send(text) {
       input.value = text;
       autoGrow();
       showError("Your agent couldn't answer that one. Try putting it another way.");
-      return;
+      speaker.stop();
+      return false;
     }
 
     bubble.textContent = textOf(reply.content);
     // Keep the full reply (not just its text) so the next turn replays it unchanged.
     conversation.messages.push(userMessage, { role: "assistant", content: reply.content });
     save();
+    if (speak) speaker.end();
+    setBusy(false);
+    await spoken;
+    return true;
   } catch (err) {
+    speaker.stop();
     bubble.remove();
     log.lastElementChild?.remove();
     if (!conversation.messages.length) empty.hidden = false;
     input.value = text;
     autoGrow();
     showError(describe(err));
+    return false;
   } finally {
     setBusy(false);
-    input.focus();
+    if (!talking) input.focus();
   }
 }
+
+// ---- Voice -------------------------------------------------------------------------------
+
+const speaker = new Speaker();
+let talking = false;
+let speakReplies = store.get(SPEAK_KEY) === "on";
+
+function lang() {
+  return store.get(LANG_KEY) || defaultLang();
+}
+
+function defaultLang() {
+  const nav = navigator.language || "en-US";
+  const match = [...langField.options].find((o) => o.value.toLowerCase() === nav.toLowerCase())
+    || [...langField.options].find((o) => o.value.startsWith(nav.split("-")[0]));
+  return match ? match.value : "en-US";
+}
+
+function setStatus(text) {
+  voiceStatus.textContent = text;
+  voiceStatus.hidden = !text;
+}
+
+function showSpeakToggle() {
+  speakToggle.textContent = speakReplies ? "Voice on" : "Voice off";
+  speakToggle.setAttribute("aria-pressed", String(speakReplies));
+}
+
+const MIC_ERRORS = {
+  "not-allowed": "Microphone access is blocked. Allow the microphone for this page in your browser, then tap the mic again.",
+  "service-not-allowed": "Microphone access is blocked. Allow the microphone for this page in your browser, then tap the mic again.",
+  "audio-capture": "No microphone was found.",
+  network: "Speech recognition needs an internet connection.",
+  "language-not-supported": "Your browser can't listen in that language. Pick another in Settings.",
+};
+
+// Conversation mode: listen, send what was said, speak the reply, then listen again.
+async function talk() {
+  let silences = 0;
+  while (talking) {
+    setStatus("Listening…");
+    micButton.classList.add("is-listening");
+    let said;
+    try {
+      said = await listen(lang(), (words) => { input.value = words; autoGrow(); });
+    } catch (code) {
+      stopTalking();
+      showError(MIC_ERRORS[code] || "The microphone stopped working. Tap the mic to try again.");
+      return;
+    }
+    micButton.classList.remove("is-listening");
+    if (!talking) return;
+    input.value = "";
+    autoGrow();
+    if (!said) {
+      if (++silences >= 2) {
+        stopTalking();
+        setStatus("Paused. Tap the mic when you want to talk.");
+        return;
+      }
+      continue;
+    }
+    silences = 0;
+    setStatus("Thinking…");
+    const ok = await send(said);
+    if (!ok) {
+      stopTalking();
+      return;
+    }
+  }
+}
+
+function stopTalking() {
+  talking = false;
+  stopListening();
+  micButton.classList.remove("is-listening", "is-on");
+  micButton.setAttribute("aria-pressed", "false");
+  micButton.setAttribute("aria-label", "Talk");
+  setStatus("");
+}
+
+micButton.addEventListener("click", () => {
+  if (!store.get(KEY_KEY)) {
+    openSettings();
+    return;
+  }
+  if (talking && speaker.onDone) {
+    // Interrupt the agent mid-sentence; talk() carries on and listens.
+    speaker.stop();
+    return;
+  }
+  if (talking) {
+    speaker.stop();
+    stopTalking();
+    return;
+  }
+  if (busy) return;
+  showError("");
+  speaker.unlock();
+  talking = true;
+  micButton.classList.add("is-on");
+  micButton.setAttribute("aria-pressed", "true");
+  micButton.setAttribute("aria-label", "Stop talking");
+  talk();
+});
+
+speakToggle.addEventListener("click", () => {
+  speakReplies = !speakReplies;
+  store.set(SPEAK_KEY, speakReplies ? "on" : "off");
+  if (speakReplies) speaker.unlock(); else if (!talking) speaker.stop();
+  showSpeakToggle();
+});
+
+micButton.hidden = !canListen;
+speakToggle.hidden = !canSpeak;
+showSpeakToggle();
 
 function openSettings() {
   keyField.value = store.get(KEY_KEY) || "";
   nameField.value = store.get(NAME_KEY) || "";
+  langField.value = lang();
   settings.showModal();
 }
 
@@ -193,6 +340,7 @@ settings.addEventListener("close", () => {
   if (settings.returnValue !== "save") return;
   const key = keyField.value.trim();
   const name = nameField.value.trim();
+  store.set(LANG_KEY, langField.value);
   if (key) store.set(KEY_KEY, key); else store.remove(KEY_KEY);
   const nameChanged = name !== (store.get(NAME_KEY) || "");
   if (name) store.set(NAME_KEY, name); else store.remove(NAME_KEY);
@@ -208,7 +356,7 @@ settings.addEventListener("close", () => {
 document.getElementById("open-settings").addEventListener("click", openSettings);
 
 document.getElementById("new-chat").addEventListener("click", () => {
-  if (busy) return;
+  if (busy || talking) return;
   if (conversation.messages.length && !confirm("Start a new conversation? This one will be cleared.")) return;
   conversation = fresh();
   save();
@@ -220,7 +368,7 @@ document.getElementById("new-chat").addEventListener("click", () => {
 form.addEventListener("submit", (event) => {
   event.preventDefault();
   const text = input.value.trim();
-  if (!text || busy) return;
+  if (!text || busy || talking) return;
   input.value = "";
   autoGrow();
   send(text);

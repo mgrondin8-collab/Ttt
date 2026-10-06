@@ -14,6 +14,7 @@
     <header class="masthead">
       <h1 class="masthead__title">Life Agent</h1>
       <div class="masthead__actions">
+        <button type="button" class="link" id="speak-toggle" aria-pressed="false">Voice off</button>
         <button type="button" class="link" id="new-chat">New conversation</button>
         <button type="button" class="link" id="open-settings">Settings</button>
       </div>
@@ -23,10 +24,14 @@
       <p class="empty" id="empty">Say hello. Talk about your day, a decision you're weighing, or whatever's on your mind.</p>
     </section>
 
+    <p class="voice-status" id="voice-status" role="status" hidden></p>
     <p class="error" id="error" role="alert" hidden></p>
 
     <form class="composer" id="composer">
       <label class="visually-hidden" for="input">Message</label>
+      <button type="button" class="mic" id="mic" aria-label="Talk" aria-pressed="false" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
+      </button>
       <textarea id="input" rows="1" placeholder="Write a message…" autocomplete="off"></textarea>
       <button type="submit" class="send" id="send" aria-label="Send">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M13 6l6 6-6 6"/></svg>
@@ -42,6 +47,16 @@
       <p class="hint">Your key is stored only in this browser and sent only to Anthropic. Create one at console.anthropic.com.</p>
       <label for="agent-name">What should your agent call you?</label>
       <input id="agent-name" type="text" placeholder="Your first name (optional)" autocomplete="given-name">
+      <label for="agent-lang">Language you speak</label>
+      <select id="agent-lang">
+        <option value="fr-CA">Français (Canada)</option>
+        <option value="fr-FR">Français (France)</option>
+        <option value="en-CA">English (Canada)</option>
+        <option value="en-US">English (US)</option>
+        <option value="en-GB">English (UK)</option>
+        <option value="es-ES">Español</option>
+      </select>
+      <p class="hint">Used to understand you when you talk, and for the agent's voice.</p>
       <div class="settings__buttons">
         <button type="submit" value="cancel" class="link">Cancel</button>
         <button type="submit" value="save" class="primary">Save</button>
